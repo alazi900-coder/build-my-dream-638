@@ -10,33 +10,43 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as ApiPublicSyncPokemonRouteImport } from './routes/api/public/sync-pokemon'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiPublicSyncPokemonRoute = ApiPublicSyncPokemonRouteImport.update({
+  id: '/api/public/sync-pokemon',
+  path: '/api/public/sync-pokemon',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/api/public/sync-pokemon': typeof ApiPublicSyncPokemonRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/api/public/sync-pokemon': typeof ApiPublicSyncPokemonRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/api/public/sync-pokemon': typeof ApiPublicSyncPokemonRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/'
+  fullPaths: '/' | '/api/public/sync-pokemon'
   fileRoutesByTo: FileRoutesByTo
-  to: '/'
-  id: '__root__' | '/'
+  to: '/' | '/api/public/sync-pokemon'
+  id: '__root__' | '/' | '/api/public/sync-pokemon'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  ApiPublicSyncPokemonRoute: typeof ApiPublicSyncPokemonRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -48,12 +58,30 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/sync-pokemon': {
+      id: '/api/public/sync-pokemon'
+      path: '/api/public/sync-pokemon'
+      fullPath: '/api/public/sync-pokemon'
+      preLoaderRoute: typeof ApiPublicSyncPokemonRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  ApiPublicSyncPokemonRoute: ApiPublicSyncPokemonRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
+
+import type { getRouter } from './router.tsx'
+import type { startInstance } from './start.ts'
+declare module '@tanstack/react-start' {
+  interface Register {
+    ssr: true
+    router: Awaited<ReturnType<typeof getRouter>>
+    config: Awaited<ReturnType<typeof startInstance.getOptions>>
+  }
+}
