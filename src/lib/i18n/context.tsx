@@ -4,7 +4,7 @@ import { translations, typeNames, type Lang } from "./translations";
 interface I18nContextValue {
   lang: Lang;
   setLang: (l: Lang) => void;
-  t: (typeof translations)["ar"];
+  t: (typeof translations)[Lang];
   dir: "rtl" | "ltr";
   typeName: (type: string) => string;
 }
