@@ -170,7 +170,7 @@ export const translations: Record<Lang, Dict> = {
     },
     backHome: "Back to home",
   },
-} as const;
+};
 
 export const typeNames: Record<string, { ar: string; en: string }> = {
   normal: { ar: "عادي", en: "Normal" },
