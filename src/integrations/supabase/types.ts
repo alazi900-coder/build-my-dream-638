@@ -14,7 +14,108 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      evolution_nodes: {
+        Row: {
+          chain_id: number
+          condition: Json | null
+          from_pokemon_id: number
+          id: number
+          item: string | null
+          min_level: number | null
+          to_pokemon_id: number
+          trigger: string | null
+        }
+        Insert: {
+          chain_id: number
+          condition?: Json | null
+          from_pokemon_id: number
+          id?: number
+          item?: string | null
+          min_level?: number | null
+          to_pokemon_id: number
+          trigger?: string | null
+        }
+        Update: {
+          chain_id?: number
+          condition?: Json | null
+          from_pokemon_id?: number
+          id?: number
+          item?: string | null
+          min_level?: number | null
+          to_pokemon_id?: number
+          trigger?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "evolution_nodes_from_pokemon_id_fkey"
+            columns: ["from_pokemon_id"]
+            isOneToOne: false
+            referencedRelation: "pokemon"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "evolution_nodes_to_pokemon_id_fkey"
+            columns: ["to_pokemon_id"]
+            isOneToOne: false
+            referencedRelation: "pokemon"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      pokemon: {
+        Row: {
+          abilities: Json
+          artwork_url: string | null
+          created_at: string
+          description_ar: string | null
+          description_en: string | null
+          evolution_chain_id: number | null
+          generation: number
+          height: number
+          id: number
+          name_ar: string | null
+          name_en: string
+          sprite_url: string | null
+          stats: Json
+          types: string[]
+          weight: number
+        }
+        Insert: {
+          abilities?: Json
+          artwork_url?: string | null
+          created_at?: string
+          description_ar?: string | null
+          description_en?: string | null
+          evolution_chain_id?: number | null
+          generation?: number
+          height?: number
+          id: number
+          name_ar?: string | null
+          name_en: string
+          sprite_url?: string | null
+          stats?: Json
+          types?: string[]
+          weight?: number
+        }
+        Update: {
+          abilities?: Json
+          artwork_url?: string | null
+          created_at?: string
+          description_ar?: string | null
+          description_en?: string | null
+          evolution_chain_id?: number | null
+          generation?: number
+          height?: number
+          id?: number
+          name_ar?: string | null
+          name_en?: string
+          sprite_url?: string | null
+          stats?: Json
+          types?: string[]
+          weight?: number
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
