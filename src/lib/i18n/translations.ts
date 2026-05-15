@@ -1,6 +1,29 @@
 export type Lang = "ar" | "en";
 
-export const translations = {
+type Dict = {
+  appName: string;
+  tagline: string;
+  nav: { pokedex: string; types: string; about: string };
+  search: { placeholder: string; noResults: string };
+  filters: { type: string; generation: string; all: string; reset: string };
+  pokemon: {
+    number: string; height: string; weight: string; types: string;
+    abilities: string; stats: string; description: string; evolution: string;
+    effectiveness: string; noEvolution: string; meters: string; kilograms: string;
+  };
+  stats: {
+    hp: string; attack: string; defense: string;
+    "special-attack": string; "special-defense": string; speed: string; total: string;
+  };
+  effectiveness: { weakTo: string; resistantTo: string; immuneTo: string; normal: string };
+  typeChart: { title: string; subtitle: string; attacker: string; defender: string };
+  loading: string; error: string; retry: string; offline: string;
+  sync: { title: string; desc: string; start: string; progress: string; of: string; done: string };
+  about: { title: string; body: string; data: string; built: string };
+  backHome: string;
+};
+
+export const translations: Record<Lang, Dict> = {
   ar: {
     appName: "موسوعة البوكيمون",
     tagline: "دليلك الكامل لعالم البوكيمون",
