@@ -59,15 +59,27 @@ const GameFilterContext = createContext<GameFilterContextType | undefined>(undef
 
 const STORAGE_KEY = "pokemon-guide-game-filter";
 
+const isGameId = (value: string | null): value is GameId => {
+  return GAMES.some((game) => game.id === value);
+};
+
 export const GameFilterProvider = ({ children }: { children: ReactNode }) => {
   const [selectedGame, setSelectedGameState] = useState<GameId>(() => {
+    if (typeof window === "undefined") return "all";
+
     const saved = localStorage.getItem(STORAGE_KEY);
-    return (saved as GameId) || "all";
+    return isGameId(saved) ? saved : "all";
   });
+
+  useEffect(() => {
+    document.documentElement.dataset.gameWorld = selectedGame;
+  }, [selectedGame]);
 
   const setSelectedGame = (game: GameId) => {
     setSelectedGameState(game);
-    localStorage.setItem(STORAGE_KEY, game);
+    if (typeof window !== "undefined") {
+      localStorage.setItem(STORAGE_KEY, game);
+    }
   };
 
   const isAvailableInGame = (availableIn: string[] | null | undefined): boolean => {

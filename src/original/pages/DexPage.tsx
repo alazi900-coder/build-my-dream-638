@@ -26,10 +26,17 @@ import {
   Sparkles,
   Compass,
   BookMarked,
+  MapPin,
+  ShieldCheck,
 } from "lucide-react";
 import { pokemonNamesArabic } from "@/original/data/arabicTranslations";
 import { TYPE_LABELS } from "@/original/lib/localization";
 import { PokemonId } from "@/original/components/ui/ltr-token";
+import {
+  getGameWorldTheme,
+  getLocalizedWorldSubtitle,
+  getLocalizedWorldTitle,
+} from "@/original/lib/gameWorlds";
 import {
   getFavoritePokemon,
   toggleFavoritePokemon,
@@ -86,8 +93,11 @@ const POKEMON_PER_PAGE = 24;
 
 export default function DexPage() {
   const { tr, trFormat, language } = useLanguage();
-  const { isAvailableInGame } = useGameFilter();
-  const isArabic = language === "ar";
+  const { selectedGame, isAvailableInGame } = useGameFilter();
+  const world = getGameWorldTheme(selectedGame);
+  const worldTitle = getLocalizedWorldTitle(world, language);
+  const worldSubtitle = getLocalizedWorldSubtitle(world, language);
+  const worldLandmark = language === "ar" ? world.landmarkAr : world.landmarkEn;
 
   const [search, setSearch] = useState("");
   const [selectedType, setSelectedType] = useState("all");
@@ -175,9 +185,46 @@ export default function DexPage() {
           icon={BookMarked}
         />
 
+        <Card className="game-world-hero-card overflow-hidden border-primary/25 bg-card/80">
+          <CardContent className="relative p-4">
+            <div className="absolute inset-0 game-world-card-glow" aria-hidden="true" />
+            <div className="relative flex items-center justify-between gap-4">
+              <div className="min-w-0 space-y-2">
+                <Badge className="w-fit border-primary/25 bg-primary/15 text-primary hover:bg-primary/15">
+                  <ShieldCheck className="w-3.5 h-3.5 me-1" />
+                  {worldTitle}
+                </Badge>
+                <div>
+                  <h2 className="text-xl font-black leading-tight text-foreground">{worldTitle}</h2>
+                  <p className="mt-1 text-sm text-muted-foreground line-clamp-2">{worldSubtitle}</p>
+                </div>
+                <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+                  <MapPin className="w-4 h-4 text-primary" />
+                  <span className="truncate">{worldLandmark}</span>
+                </div>
+              </div>
+              <div className="pokemon-mascot-stack" aria-hidden="true">
+                {world.mascotPokemonIds.map((pokemonId, index) => (
+                  <OfflineImage
+                    key={pokemonId}
+                    src={getPokemonSpriteUrl(pokemonId)}
+                    alt=""
+                    className={cn(
+                      "pokemon-mascot-sprite image-render-pixelated",
+                      index === 1 && "-ms-4 mt-5",
+                      index === 2 && "-ms-4 -mt-3 hidden sm:block",
+                    )}
+                    placeholderType="pokemon"
+                  />
+                ))}
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
         {/* Exploration Progress - Simplified colors */}
         {totalAvailablePokemon > 0 && (
-          <Card className="border-primary/20 bg-muted/30">
+          <Card className="game-world-panel border-primary/20 bg-muted/35">
             <CardContent className="p-3">
               <div className="flex items-center justify-between mb-2">
                 <div className="flex items-center gap-2">
@@ -198,7 +245,7 @@ export default function DexPage() {
                   </span>
                 </div>
               </div>
-              <Progress value={progressPercent} className="h-2" />
+              <Progress value={progressPercent} className="h-2 progress-world" />
             </CardContent>
           </Card>
         )}
@@ -211,7 +258,7 @@ export default function DexPage() {
         />
 
         {/* Type Filters */}
-        <div className="flex gap-2 overflow-x-auto pb-2 -mx-4 px-4 scrollbar-hide">
+        <div className="world-type-filter-row flex gap-2 overflow-x-auto pb-2 -mx-4 px-4 scrollbar-hide">
           {typeFilters.map((type) => {
             const isFavoritesFilter = type === "favorites";
             const label =
@@ -230,8 +277,8 @@ export default function DexPage() {
                 size="sm"
                 onClick={() => setSelectedType(type)}
                 className={cn(
-                  "whitespace-nowrap shrink-0 min-h-[44px] px-4",
-                  selectedType === type && "border-2",
+                  "whitespace-nowrap shrink-0 min-h-[44px] px-4 world-type-filter",
+                  selectedType === type && "border-2 world-type-filter-active",
                 )}
               >
                 {isFavoritesFilter && (
@@ -276,7 +323,7 @@ export default function DexPage() {
                   <Link
                     key={p.id}
                     to={`/pokemon/${p.id}`}
-                    className="bg-card border-2 border-border rounded-xl p-3 text-start hover:border-primary transition-all group hover:shadow-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 min-h-[180px] active:scale-[0.98] touch-manipulation relative"
+                    className="pokedex-entry-card bg-card/90 border-2 border-border rounded-2xl p-3 text-start hover:border-primary transition-all group hover:shadow-xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 min-h-[190px] active:scale-[0.98] touch-manipulation relative overflow-hidden"
                   >
                     {/* Favorite Button */}
                     <button
@@ -339,19 +386,25 @@ export default function DexPage() {
                     </div>
 
                     {/* Pokemon Image */}
-                    <div className="w-full aspect-square bg-muted/50 rounded-lg mb-2 flex items-center justify-center group-hover:scale-105 transition-transform overflow-hidden">
+                    <div className="pokedex-entry-screen w-full aspect-square bg-muted/50 rounded-xl mb-2 flex items-center justify-center group-hover:scale-105 transition-transform overflow-hidden relative">
+                      <span className="pokedex-entry-scanline" aria-hidden="true" />
                       <OfflineImage
                         src={getPokemonSpriteUrl(p.id)}
                         alt={language === "ar" ? p.name_ar : p.name_en}
-                        className="w-full h-full object-contain"
+                        className="w-full h-full object-contain drop-shadow-lg image-render-pixelated"
                         placeholderType="pokemon"
                       />
                     </div>
 
                     {/* Number */}
-                    <p className="text-[10px] text-muted-foreground">
-                      <PokemonId id={p.id} />
-                    </p>
+                    <div className="flex items-center justify-between gap-2 text-[10px] text-muted-foreground">
+                      <p>
+                        <PokemonId id={p.id} />
+                      </p>
+                      <span className="pokedex-region-tag">
+                        {language === "ar" ? world.shortAr : world.shortEn}
+                      </span>
+                    </div>
 
                     {/* Name */}
                     <p className="font-bold text-sm truncate text-foreground">
