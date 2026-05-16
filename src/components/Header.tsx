@@ -1,6 +1,6 @@
 import { Link } from "@tanstack/react-router";
 import { useI18n } from "@/lib/i18n/context";
-import { Languages, Wifi, WifiOff } from "lucide-react";
+import { Gamepad2, Globe2, Search, Wifi, WifiOff } from "lucide-react";
 import { useEffect, useState } from "react";
 import { GameFilterChips } from "@/components/GameFilterChips";
 
@@ -20,47 +20,44 @@ export function Header() {
   }, []);
 
   return (
-    <header className="sticky top-0 z-30 border-b border-border bg-background/80 backdrop-blur">
-      <div className="mx-auto flex max-w-6xl items-center justify-between gap-4 px-4 py-3">
-        <Link to="/" className="flex items-center gap-2 font-bold text-lg">
-          <span className="inline-block h-7 w-7 rounded-full bg-gradient-to-b from-primary to-foreground ring-2 ring-background shadow" />
-          <span>{t.appName}</span>
-        </Link>
-        <nav className="hidden items-center gap-1 md:flex">
-          <Link to="/" className="rounded-md px-3 py-1.5 text-sm font-medium hover:bg-accent" activeProps={{ className: "bg-accent" }} activeOptions={{ exact: true }}>
-            {t.nav.pokedex}
-          </Link>
-          <Link to="/items" className="rounded-md px-3 py-1.5 text-sm font-medium hover:bg-accent" activeProps={{ className: "bg-accent" }}>
-            {t.nav.items}
-          </Link>
-          <Link to="/types" className="rounded-md px-3 py-1.5 text-sm font-medium hover:bg-accent" activeProps={{ className: "bg-accent" }}>
-            {t.nav.types}
-          </Link>
-          <Link to="/about" className="rounded-md px-3 py-1.5 text-sm font-medium hover:bg-accent" activeProps={{ className: "bg-accent" }}>
-            {t.nav.about}
-          </Link>
-        </nav>
-        <div className="flex items-center gap-2">
-          {!online && (
-            <span title={t.offline} className="flex items-center gap-1 rounded-full bg-destructive/15 px-2 py-1 text-xs text-destructive">
-              <WifiOff className="h-3.5 w-3.5" />
+    <header className="sticky top-0 z-30 rounded-b-[2rem] border-b border-border bg-card/95 shadow-sm backdrop-blur">
+      <div className="mx-auto flex max-w-6xl items-center justify-between gap-3 px-4 pb-2 pt-4">
+        <Link to="/" className="flex min-w-0 items-center gap-3">
+          <span className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-primary/15 text-primary">
+            <Gamepad2 className="h-8 w-8" />
+          </span>
+          <span className="min-w-0">
+            <span className="block truncate text-3xl font-black leading-tight text-foreground md:text-4xl">
+              {t.appName}
             </span>
-          )}
-          {online && <Wifi className="h-4 w-4 text-muted-foreground" aria-hidden />}
+            <span className="block truncate text-base font-semibold text-muted-foreground">
+              {t.tagline}
+            </span>
+          </span>
+        </Link>
+        <div className="flex shrink-0 items-center gap-2">
           <button
-            onClick={() => setLang(lang === "ar" ? "en" : "ar")}
-            className="inline-flex items-center gap-1.5 rounded-md border border-border bg-card px-3 py-1.5 text-sm font-medium hover:bg-accent"
+            type="button"
+            className="hidden h-12 w-12 items-center justify-center rounded-xl border border-border bg-muted/60 text-muted-foreground sm:flex"
+            aria-label={lang === "ar" ? "بحث" : "Search"}
           >
-            <Languages className="h-4 w-4" />
-            {lang === "ar" ? "EN" : "ع"}
+            <Search className="h-6 w-6" />
+          </button>
+          <span
+            title={online ? undefined : t.offline}
+            className="hidden h-12 w-12 items-center justify-center rounded-xl text-amber-500 sm:flex"
+          >
+            {online ? <Wifi className="h-6 w-6" aria-hidden /> : <WifiOff className="h-6 w-6" />}
+          </span>
+          <button
+            type="button"
+            onClick={() => setLang(lang === "ar" ? "en" : "ar")}
+            className="inline-flex h-12 items-center gap-2 rounded-xl border border-border bg-muted/60 px-4 text-lg font-bold text-foreground hover:bg-accent"
+          >
+            <span>{lang === "ar" ? "EN" : "ع"}</span>
+            <Globe2 className="h-6 w-6" />
           </button>
         </div>
-      </div>
-      <div className="mx-auto flex max-w-6xl gap-1 overflow-x-auto px-4 pb-2 md:hidden">
-        <Link to="/" className="rounded-md px-3 py-1 text-sm" activeProps={{ className: "bg-accent" }} activeOptions={{ exact: true }}>{t.nav.pokedex}</Link>
-        <Link to="/items" className="rounded-md px-3 py-1 text-sm" activeProps={{ className: "bg-accent" }}>{t.nav.items}</Link>
-        <Link to="/types" className="rounded-md px-3 py-1 text-sm" activeProps={{ className: "bg-accent" }}>{t.nav.types}</Link>
-        <Link to="/about" className="rounded-md px-3 py-1 text-sm" activeProps={{ className: "bg-accent" }}>{t.nav.about}</Link>
       </div>
       <GameFilterChips />
     </header>

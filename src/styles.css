@@ -1,7 +1,7 @@
+@import url("https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;900&family=Poppins:wght@400;500;600;700;900&display=swap");
 @import "tailwindcss" source(none);
 @source "../src";
 @import "tw-animate-css";
-@import url("https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;900&family=Poppins:wght@400;500;600;700;900&display=swap");
 
 @custom-variant dark (&:is(.dark *));
 
@@ -63,7 +63,7 @@
   --card-foreground: oklch(0.18 0.02 260);
   --popover: oklch(1 0 0);
   --popover-foreground: oklch(0.18 0.02 260);
-  --primary: oklch(0.55 0.22 25);
+  --primary: oklch(0.55 0.24 285);
   --primary-foreground: oklch(0.99 0 0);
   --secondary: oklch(0.95 0.01 260);
   --secondary-foreground: oklch(0.25 0.03 260);
@@ -75,7 +75,7 @@
   --destructive-foreground: oklch(0.99 0 0);
   --border: oklch(0.9 0.01 260);
   --input: oklch(0.93 0.01 260);
-  --ring: oklch(0.55 0.22 25);
+  --ring: oklch(0.55 0.24 285);
 
   --type-normal: oklch(0.72 0.04 90);
   --type-fire: oklch(0.68 0.2 40);
@@ -104,7 +104,7 @@
   --card-foreground: oklch(0.96 0.005 260);
   --popover: oklch(0.22 0.02 260);
   --popover-foreground: oklch(0.96 0.005 260);
-  --primary: oklch(0.7 0.2 25);
+  --primary: oklch(0.68 0.22 285);
   --primary-foreground: oklch(0.16 0.02 260);
   --secondary: oklch(0.28 0.02 260);
   --secondary-foreground: oklch(0.96 0.005 260);
@@ -116,7 +116,7 @@
   --destructive-foreground: oklch(0.99 0 0);
   --border: oklch(1 0 0 / 12%);
   --input: oklch(1 0 0 / 15%);
-  --ring: oklch(0.7 0.2 25);
+  --ring: oklch(0.68 0.22 285);
 }
 
 @layer base {
@@ -134,7 +134,10 @@
   [dir="rtl"] body {
     font-family: "Tajawal", system-ui, sans-serif;
   }
-  h1, h2, h3, h4 {
+  h1,
+  h2,
+  h3,
+  h4 {
     font-family: var(--font-display);
     font-weight: 700;
   }
@@ -148,7 +151,16 @@
 
 @layer utilities {
   .pokeball-bg {
-    background-image: radial-gradient(circle at 20% 20%, oklch(1 0 0 / 0.18), transparent 45%),
+    background-image:
+      radial-gradient(circle at 20% 20%, oklch(1 0 0 / 0.18), transparent 45%),
       radial-gradient(circle at 80% 80%, oklch(1 0 0 / 0.1), transparent 45%);
+  }
+
+  .image-render-pixelated {
+    image-rendering: pixelated;
+  }
+
+  .scrollbar-thin {
+    scrollbar-width: thin;
   }
 }
