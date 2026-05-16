@@ -7,7 +7,7 @@ export function GameFilterChips() {
   const { game, setGame } = useGameFilter();
   const { lang } = useI18n();
   return (
-    <div className="mx-auto flex max-w-6xl gap-2 overflow-x-auto px-4 pb-2 pt-1 scrollbar-thin">
+    <div className="mx-auto flex max-w-6xl gap-3 overflow-x-auto px-4 pb-4 pt-2 scrollbar-thin">
       {GAMES.map((g) => {
         const active = g.id === game;
         return (
@@ -15,10 +15,10 @@ export function GameFilterChips() {
             key={g.id}
             onClick={() => setGame(g.id)}
             className={cn(
-              "shrink-0 rounded-full border px-3 py-1 text-xs font-medium whitespace-nowrap transition-all",
+              "shrink-0 rounded-xl px-4 py-2.5 text-base font-black whitespace-nowrap transition-all sm:text-lg",
               active
-                ? `${g.accent} text-white border-transparent shadow`
-                : "border-border bg-card text-muted-foreground hover:bg-accent hover:text-foreground",
+                ? "bg-primary text-primary-foreground shadow-lg shadow-primary/25"
+                : "text-muted-foreground hover:bg-muted hover:text-foreground",
             )}
             title={lang === "ar" ? g.fullNameAr : g.fullNameEn}
           >
