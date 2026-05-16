@@ -2,6 +2,7 @@ import { Link } from "@tanstack/react-router";
 import { useI18n } from "@/lib/i18n/context";
 import { Languages, Wifi, WifiOff } from "lucide-react";
 import { useEffect, useState } from "react";
+import { GameFilterChips } from "@/components/GameFilterChips";
 
 export function Header() {
   const { t, lang, setLang } = useI18n();
