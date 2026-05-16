@@ -58,9 +58,11 @@ export function Header() {
       </div>
       <div className="mx-auto flex max-w-6xl gap-1 overflow-x-auto px-4 pb-2 md:hidden">
         <Link to="/" className="rounded-md px-3 py-1 text-sm" activeProps={{ className: "bg-accent" }} activeOptions={{ exact: true }}>{t.nav.pokedex}</Link>
+        <Link to="/items" className="rounded-md px-3 py-1 text-sm" activeProps={{ className: "bg-accent" }}>{t.nav.items}</Link>
         <Link to="/types" className="rounded-md px-3 py-1 text-sm" activeProps={{ className: "bg-accent" }}>{t.nav.types}</Link>
         <Link to="/about" className="rounded-md px-3 py-1 text-sm" activeProps={{ className: "bg-accent" }}>{t.nav.about}</Link>
       </div>
+      <GameFilterChips />
     </header>
   );
 }
