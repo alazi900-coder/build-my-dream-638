@@ -5,6 +5,7 @@ import {
 } from "@tanstack/react-router";
 import appCss from "../styles.css?url";
 import { I18nProvider } from "@/lib/i18n/context";
+import { GameFilterProvider } from "@/lib/gameFilter";
 import { Header } from "@/components/Header";
 
 function NotFoundComponent() {
@@ -63,13 +64,15 @@ function RootComponent() {
   return (
     <QueryClientProvider client={queryClient}>
       <I18nProvider>
-        <div className="flex min-h-screen flex-col">
-          <Header />
-          <main className="flex-1"><Outlet /></main>
-          <footer className="border-t border-border py-4 text-center text-xs text-muted-foreground">
-            PokéAPI · Lovable
-          </footer>
-        </div>
+        <GameFilterProvider>
+          <div className="flex min-h-screen flex-col">
+            <Header />
+            <main className="flex-1"><Outlet /></main>
+            <footer className="border-t border-border py-4 text-center text-xs text-muted-foreground">
+              PokéAPI · Lovable
+            </footer>
+          </div>
+        </GameFilterProvider>
       </I18nProvider>
     </QueryClientProvider>
   );

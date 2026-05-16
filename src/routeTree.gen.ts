@@ -10,14 +10,21 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as TypesRouteImport } from './routes/types'
+import { Route as ItemsRouteImport } from './routes/items'
 import { Route as AboutRouteImport } from './routes/about'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as PokemonIdRouteImport } from './routes/pokemon.$id'
+import { Route as ItemsIdRouteImport } from './routes/items.$id'
 import { Route as ApiPublicSyncPokemonRouteImport } from './routes/api/public/sync-pokemon'
 
 const TypesRoute = TypesRouteImport.update({
   id: '/types',
   path: '/types',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ItemsRoute = ItemsRouteImport.update({
+  id: '/items',
+  path: '/items',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AboutRoute = AboutRouteImport.update({
@@ -35,6 +42,11 @@ const PokemonIdRoute = PokemonIdRouteImport.update({
   path: '/pokemon/$id',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ItemsIdRoute = ItemsIdRouteImport.update({
+  id: '/$id',
+  path: '/$id',
+  getParentRoute: () => ItemsRoute,
+} as any)
 const ApiPublicSyncPokemonRoute = ApiPublicSyncPokemonRouteImport.update({
   id: '/api/public/sync-pokemon',
   path: '/api/public/sync-pokemon',
@@ -44,14 +56,18 @@ const ApiPublicSyncPokemonRoute = ApiPublicSyncPokemonRouteImport.update({
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/about': typeof AboutRoute
+  '/items': typeof ItemsRouteWithChildren
   '/types': typeof TypesRoute
+  '/items/$id': typeof ItemsIdRoute
   '/pokemon/$id': typeof PokemonIdRoute
   '/api/public/sync-pokemon': typeof ApiPublicSyncPokemonRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/about': typeof AboutRoute
+  '/items': typeof ItemsRouteWithChildren
   '/types': typeof TypesRoute
+  '/items/$id': typeof ItemsIdRoute
   '/pokemon/$id': typeof PokemonIdRoute
   '/api/public/sync-pokemon': typeof ApiPublicSyncPokemonRoute
 }
@@ -59,7 +75,9 @@ export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/about': typeof AboutRoute
+  '/items': typeof ItemsRouteWithChildren
   '/types': typeof TypesRoute
+  '/items/$id': typeof ItemsIdRoute
   '/pokemon/$id': typeof PokemonIdRoute
   '/api/public/sync-pokemon': typeof ApiPublicSyncPokemonRoute
 }
@@ -68,16 +86,27 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/about'
+    | '/items'
     | '/types'
+    | '/items/$id'
     | '/pokemon/$id'
     | '/api/public/sync-pokemon'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/about' | '/types' | '/pokemon/$id' | '/api/public/sync-pokemon'
+  to:
+    | '/'
+    | '/about'
+    | '/items'
+    | '/types'
+    | '/items/$id'
+    | '/pokemon/$id'
+    | '/api/public/sync-pokemon'
   id:
     | '__root__'
     | '/'
     | '/about'
+    | '/items'
     | '/types'
+    | '/items/$id'
     | '/pokemon/$id'
     | '/api/public/sync-pokemon'
   fileRoutesById: FileRoutesById
@@ -85,6 +114,7 @@ export interface FileRouteTypes {
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AboutRoute: typeof AboutRoute
+  ItemsRoute: typeof ItemsRouteWithChildren
   TypesRoute: typeof TypesRoute
   PokemonIdRoute: typeof PokemonIdRoute
   ApiPublicSyncPokemonRoute: typeof ApiPublicSyncPokemonRoute
@@ -97,6 +127,13 @@ declare module '@tanstack/react-router' {
       path: '/types'
       fullPath: '/types'
       preLoaderRoute: typeof TypesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/items': {
+      id: '/items'
+      path: '/items'
+      fullPath: '/items'
+      preLoaderRoute: typeof ItemsRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/about': {
@@ -120,6 +157,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof PokemonIdRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/items/$id': {
+      id: '/items/$id'
+      path: '/$id'
+      fullPath: '/items/$id'
+      preLoaderRoute: typeof ItemsIdRouteImport
+      parentRoute: typeof ItemsRoute
+    }
     '/api/public/sync-pokemon': {
       id: '/api/public/sync-pokemon'
       path: '/api/public/sync-pokemon'
@@ -130,9 +174,20 @@ declare module '@tanstack/react-router' {
   }
 }
 
+interface ItemsRouteChildren {
+  ItemsIdRoute: typeof ItemsIdRoute
+}
+
+const ItemsRouteChildren: ItemsRouteChildren = {
+  ItemsIdRoute: ItemsIdRoute,
+}
+
+const ItemsRouteWithChildren = ItemsRoute._addFileChildren(ItemsRouteChildren)
+
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AboutRoute: AboutRoute,
+  ItemsRoute: ItemsRouteWithChildren,
   TypesRoute: TypesRoute,
   PokemonIdRoute: PokemonIdRoute,
   ApiPublicSyncPokemonRoute: ApiPublicSyncPokemonRoute,

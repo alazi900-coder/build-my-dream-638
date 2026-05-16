@@ -3,7 +3,7 @@ export type Lang = "ar" | "en";
 type Dict = {
   appName: string;
   tagline: string;
-  nav: { pokedex: string; types: string; about: string };
+  nav: { pokedex: string; items: string; types: string; about: string };
   search: { placeholder: string; noResults: string };
   filters: { type: string; generation: string; all: string; reset: string };
   pokemon: {
@@ -29,6 +29,7 @@ export const translations: Record<Lang, Dict> = {
     tagline: "دليلك الكامل لعالم البوكيمون",
     nav: {
       pokedex: "البوكيدكس",
+      items: "الأدوات",
       types: "الأنواع",
       about: "حول",
     },
@@ -102,6 +103,7 @@ export const translations: Record<Lang, Dict> = {
     tagline: "Your complete guide to the world of Pokémon",
     nav: {
       pokedex: "Pokédex",
+      items: "Items",
       types: "Types",
       about: "About",
     },
