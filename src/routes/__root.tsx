@@ -9,7 +9,7 @@ import { OriginalClientApp } from "@/original/ClientApp";
 import appCss from "../styles.css?url";
 
 function NotFoundComponent() {
-  return <OriginalClientApp />;
+  return <OriginalAppWithQueryProvider />;
 }
 
 function ErrorComponent({ error, reset }: { error: Error; reset: () => void }) {
@@ -89,11 +89,15 @@ function RootShell({ children }: { children: React.ReactNode }) {
   );
 }
 
-function RootComponent() {
+function OriginalAppWithQueryProvider() {
   const { queryClient } = Route.useRouteContext();
   return (
     <QueryClientProvider client={queryClient}>
       <OriginalClientApp />
     </QueryClientProvider>
   );
+}
+
+function RootComponent() {
+  return <OriginalAppWithQueryProvider />;
 }

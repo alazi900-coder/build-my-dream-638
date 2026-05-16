@@ -2,6 +2,7 @@ import { useState, useCallback, useEffect } from "react";
 import { useLanguage } from "@/original/contexts/LanguageContext";
 import { useOnlineStatus } from "@/original/hooks/useOnlineStatus";
 import { toast } from "@/original/hooks/use-toast";
+import { getSupabaseFunctionRequest } from "@/original/integrations/supabase/client";
 import { findCachedResponse, saveAIResponse, initializeFAQ } from "@/original/lib/offlineAI";
 import { processLocalQuestion } from "@/original/lib/localAssistant";
 
@@ -14,7 +15,6 @@ export interface ChatMessage {
   isOffline?: boolean; // Flag to indicate offline response
 }
 
-const CHAT_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/ai-coach`;
 const STORAGE_KEY = "pokemon-coach-chat-history";
 
 const loadMessagesFromStorage = (): ChatMessage[] => {
@@ -158,11 +158,31 @@ export const useOfflineAICoach = () => {
           content: m.content,
         }));
 
-        const resp = await fetch(CHAT_URL, {
+        const request = getSupabaseFunctionRequest("ai-coach");
+        if (!request) {
+          const localResponse = processLocalQuestion(userMessage, language);
+          setMessages((prev) => [
+            ...prev,
+            {
+              id: assistantId,
+              role: "assistant",
+              content:
+                localResponse ||
+                (language === "ar"
+                  ? "ميزة المدرب الذكي تحتاج إعداد Supabase للردود المتصلة."
+                  : "AI Coach needs Supabase configuration for online responses."),
+              timestamp: Date.now(),
+              isOffline: true,
+            },
+          ]);
+          return;
+        }
+
+        const resp = await fetch(request.url, {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
-            Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
+            ...request.headers,
           },
           body: JSON.stringify({ messages: chatMessages, language }),
         });
