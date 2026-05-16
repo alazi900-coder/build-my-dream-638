@@ -8,6 +8,8 @@ import { TYPES } from "@/lib/typeChart";
 import { typeNames } from "@/lib/i18n/translations";
 import { cachePokemon, getAllCachedPokemon } from "@/lib/db";
 import { Search, X, Loader2 } from "lucide-react";
+import { useGameFilter } from "@/lib/gameFilter";
+import { pokemonInGame, getGame } from "@/lib/games";
 
 export const Route = createFileRoute("/")({ component: PokedexPage });
 
