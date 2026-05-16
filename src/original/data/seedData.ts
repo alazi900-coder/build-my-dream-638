@@ -3164,6 +3164,14 @@ const gymsData = [
 // Combine all Pokemon data
 const allPokemonData = [...pokemonData, ...pokemonData2, ...pokemonData3];
 
+export const localSeedData = {
+  pokemon: allPokemonData,
+  moves: movesData,
+  items: itemsData,
+  locations: locationsData,
+  gyms: gymsData,
+} as const;
+
 export interface SeedResult {
   [key: string]: { success: boolean; count: number };
 }

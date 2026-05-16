@@ -744,10 +744,10 @@ export default function PokemonDetailPage() {
   };
 
   // Calculate total stats
-  const totalStats = Object.values(pokemon.stats || {}).reduce(
-    (sum: number, val) => sum + (val as number),
-    0,
-  );
+  const totalStats = Object.values(pokemon.stats || {}).reduce((sum: number, val) => {
+    const statValue = typeof val === "number" ? val : Number(val);
+    return sum + (Number.isFinite(statValue) ? statValue : 0);
+  }, 0);
 
   return (
     <Layout>
@@ -909,11 +909,18 @@ export default function PokemonDetailPage() {
           >
             <div className="space-y-3">
               {Object.entries(pokemon.stats || {}).map(([key, value]) => {
-                const Icon = statIcons[key as keyof typeof statIcons];
-                const label = statLabels[key as keyof typeof statLabels];
-                const color = statColors[key as keyof typeof statColors];
-                const percentage = Math.min((value / 255) * 100, 100);
-                const statInterpretation = getStatLabel(value);
+                const Icon = statIcons[key as keyof typeof statIcons] ?? BarChart3;
+                const label = statLabels[key as keyof typeof statLabels] ?? {
+                  en: key.toUpperCase(),
+                  ar: key,
+                  enFull: key,
+                  arFull: key,
+                };
+                const color = statColors[key as keyof typeof statColors] ?? "bg-primary";
+                const statValue = typeof value === "number" ? value : Number(value);
+                const safeValue = Number.isFinite(statValue) ? statValue : 0;
+                const percentage = Math.min((safeValue / 255) * 100, 100);
+                const statInterpretation = getStatLabel(safeValue);
 
                 return (
                   <div
@@ -922,7 +929,7 @@ export default function PokemonDetailPage() {
                     title={language === "ar" ? label.arFull : label.enFull}
                   >
                     <div className="flex items-center gap-2 w-20 shrink-0">
-                      {Icon && <Icon className="w-4 h-4 text-muted-foreground" />}
+                      <Icon className="w-4 h-4 text-muted-foreground" />
                       <span className="text-xs font-medium text-muted-foreground uppercase">
                         {language === "ar" ? label.ar : label.en}
                       </span>
@@ -933,7 +940,7 @@ export default function PokemonDetailPage() {
                         style={{ width: `${percentage}%` }}
                       />
                     </div>
-                    <span className="font-bold text-foreground w-10 text-right">{value}</span>
+                    <span className="font-bold text-foreground w-10 text-right">{safeValue}</span>
                     <span className={cn("text-xs w-14 text-right", statInterpretation.color)}>
                       {language === "ar" ? statInterpretation.ar : statInterpretation.en}
                     </span>
