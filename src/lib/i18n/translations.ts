@@ -3,7 +3,7 @@ export type Lang = "ar" | "en";
 type Dict = {
   appName: string;
   tagline: string;
-  nav: { pokedex: string; types: string; about: string };
+  nav: { pokedex: string; items: string; types: string; about: string };
   search: { placeholder: string; noResults: string };
   filters: { type: string; generation: string; all: string; reset: string };
   pokemon: {
