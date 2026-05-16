@@ -5,6 +5,7 @@ import {
 } from "@tanstack/react-router";
 import appCss from "../styles.css?url";
 import { I18nProvider } from "@/lib/i18n/context";
+import { GameFilterProvider } from "@/lib/gameFilter";
 import { Header } from "@/components/Header";
 
 function NotFoundComponent() {
