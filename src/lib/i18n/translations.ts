@@ -29,6 +29,7 @@ export const translations: Record<Lang, Dict> = {
     tagline: "دليلك الكامل لعالم البوكيمون",
     nav: {
       pokedex: "البوكيدكس",
+      items: "الأدوات",
       types: "الأنواع",
       about: "حول",
     },
