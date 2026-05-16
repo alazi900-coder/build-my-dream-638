@@ -68,6 +68,7 @@ function PokedexPage() {
 
   const filtered = useMemo(() => {
     return pokemon.filter((p) => {
+      if (!pokemonInGame(p.id, game)) return false;
       if (type && !p.types.includes(type)) return false;
       if (gen && p.generation !== Number(gen)) return false;
       if (q) {
@@ -77,7 +78,7 @@ function PokedexPage() {
       }
       return true;
     });
-  }, [pokemon, q, type, gen, lang]);
+  }, [pokemon, q, type, gen, lang, game]);
 
   // Auto-jump on exact id match
   useEffect(() => {
@@ -88,11 +89,17 @@ function PokedexPage() {
     }
   }, [q, pokemon, navigate]);
 
+  const gameInfo = getGame(game);
+  const gameName = lang === "ar" ? gameInfo.fullNameAr : gameInfo.fullNameEn;
+
   return (
     <div className="mx-auto max-w-6xl px-4 py-6">
       <div className="mb-6 text-center">
         <h1 className="text-3xl font-bold md:text-4xl">{t.appName}</h1>
         <p className="mt-1 text-sm text-muted-foreground">{t.tagline}</p>
+        <p className="mt-2 inline-flex items-center gap-2 rounded-full bg-muted px-3 py-1 text-xs font-medium">
+          {gameName} · {filtered.length}
+        </p>
       </div>
 
       {needsSync && (
