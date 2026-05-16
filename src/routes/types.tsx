@@ -19,7 +19,16 @@ function TypesPage() {
         <h2 className="mb-2 text-sm font-semibold text-muted-foreground">{t.typeChart.attacker}</h2>
         <div className="flex flex-wrap gap-2">
           {TYPES.map((tt) => (
-            <button key={tt} onClick={() => setAttacker(tt)} className={cn("rounded-full transition-transform", attacker === tt ? "ring-2 ring-foreground scale-110" : "opacity-70 hover:opacity-100")}>
+            <button
+              key={tt}
+              onClick={() => setAttacker(tt)}
+              className={cn(
+                "rounded-full transition-transform",
+                attacker === tt
+                  ? "ring-2 ring-foreground scale-110"
+                  : "opacity-70 hover:opacity-100",
+              )}
+            >
               <TypeBadge type={tt} size="sm" />
             </button>
           ))}
@@ -32,12 +41,22 @@ function TypesPage() {
           {TYPES.map((def) => {
             const mult = getMultiplier(attacker, def);
             const label = mult === 0 ? "×0" : `×${mult}`;
-            const color = mult === 0 ? "bg-muted text-muted-foreground" :
-              mult >= 2 ? "bg-type-grass/20 text-foreground" :
-              mult <= 0.5 ? "bg-type-fire/20 text-foreground" :
-              "bg-card";
+            const color =
+              mult === 0
+                ? "bg-muted text-muted-foreground"
+                : mult >= 2
+                  ? "bg-type-grass/20 text-foreground"
+                  : mult <= 0.5
+                    ? "bg-type-fire/20 text-foreground"
+                    : "bg-card";
             return (
-              <div key={def} className={cn("flex items-center justify-between rounded-lg border border-border px-3 py-2", color)}>
+              <div
+                key={def}
+                className={cn(
+                  "flex items-center justify-between rounded-lg border border-border px-3 py-2",
+                  color,
+                )}
+              >
                 <TypeBadge type={def} size="sm" />
                 <span className="font-bold tabular-nums">{label}</span>
               </div>

@@ -1,0 +1,27 @@
+{
+  "name": "Pokémon Shield Guide | دليل بوكيمون شيلد",
+  "short_name": "Shield Guide",
+  "description": "A complete bilingual guide for Pokémon Shield with Pokédex, moves, items, locations, and gyms.",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#000000",
+  "theme_color": "#000000",
+  "lang": "ar",
+  "dir": "rtl",
+  "orientation": "portrait-primary",
+  "icons": [
+    {
+      "src": "/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}

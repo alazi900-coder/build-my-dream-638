@@ -1,6 +1,13 @@
 import { useI18n } from "@/lib/i18n/context";
 
-const STAT_KEYS = ["hp", "attack", "defense", "special-attack", "special-defense", "speed"] as const;
+const STAT_KEYS = [
+  "hp",
+  "attack",
+  "defense",
+  "special-attack",
+  "special-defense",
+  "speed",
+] as const;
 
 export function StatsBars({ stats }: { stats: Record<string, number> }) {
   const { t } = useI18n();
@@ -11,7 +18,14 @@ export function StatsBars({ stats }: { stats: Record<string, number> }) {
       {STAT_KEYS.map((k) => {
         const v = stats[k] ?? 0;
         const pct = Math.min(100, (v / max) * 100);
-        const color = v >= 100 ? "bg-type-grass" : v >= 70 ? "bg-type-electric" : v >= 40 ? "bg-type-fire" : "bg-destructive";
+        const color =
+          v >= 100
+            ? "bg-type-grass"
+            : v >= 70
+              ? "bg-type-electric"
+              : v >= 40
+                ? "bg-type-fire"
+                : "bg-destructive";
         return (
           <div key={k} className="grid grid-cols-[7rem_3rem_1fr] items-center gap-2 text-sm">
             <span className="text-muted-foreground">{t.stats[k]}</span>
