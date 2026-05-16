@@ -30,6 +30,9 @@ export function Header() {
           <Link to="/" className="rounded-md px-3 py-1.5 text-sm font-medium hover:bg-accent" activeProps={{ className: "bg-accent" }} activeOptions={{ exact: true }}>
             {t.nav.pokedex}
           </Link>
+          <Link to="/items" className="rounded-md px-3 py-1.5 text-sm font-medium hover:bg-accent" activeProps={{ className: "bg-accent" }}>
+            {t.nav.items}
+          </Link>
           <Link to="/types" className="rounded-md px-3 py-1.5 text-sm font-medium hover:bg-accent" activeProps={{ className: "bg-accent" }}>
             {t.nav.types}
           </Link>
