@@ -7,6 +7,7 @@ import { Button } from "@/original/components/ui/button";
 import { Sparkles, Trash2 } from "lucide-react";
 import { cn } from "@/original/lib/utils";
 import { toast } from "@/original/hooks/use-toast";
+import { getSupabaseFunctionRequest } from "@/original/integrations/supabase/client";
 
 interface Message {
   id: string;
@@ -15,7 +16,6 @@ interface Message {
   isStreaming?: boolean;
 }
 
-const CHAT_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/ai-chatgpt`;
 const STORAGE_KEY = "chatgpt-history";
 
 const ChatGPTPage = () => {
@@ -83,11 +83,24 @@ const ChatGPTPage = () => {
           content: m.content,
         }));
 
-        const resp = await fetch(CHAT_URL, {
+        const request = getSupabaseFunctionRequest("ai-chatgpt");
+        if (!request) {
+          toast({
+            title: language === "ar" ? "الإعداد غير مكتمل" : "Missing configuration",
+            description:
+              language === "ar"
+                ? "اتصال Supabase غير معد لميزة Gemini."
+                : "Supabase is not configured for Gemini chat.",
+            variant: "destructive",
+          });
+          return;
+        }
+
+        const resp = await fetch(request.url, {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
-            Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
+            ...request.headers,
           },
           body: JSON.stringify({ messages: chatMessages, language }),
         });

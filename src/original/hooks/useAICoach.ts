@@ -1,6 +1,7 @@
 import { useState, useCallback, useEffect } from "react";
 import { useLanguage } from "@/original/contexts/LanguageContext";
 import { toast } from "@/original/hooks/use-toast";
+import { getSupabaseFunctionRequest } from "@/original/integrations/supabase/client";
 
 export interface ChatMessage {
   id: string;
@@ -10,7 +11,6 @@ export interface ChatMessage {
   timestamp?: number;
 }
 
-const CHAT_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/ai-coach`;
 const STORAGE_KEY = "pokemon-coach-chat-history";
 
 const loadMessagesFromStorage = (): ChatMessage[] => {
@@ -95,11 +95,24 @@ export const useAICoach = () => {
           content: m.content,
         }));
 
-        const resp = await fetch(CHAT_URL, {
+        const request = getSupabaseFunctionRequest("ai-coach");
+        if (!request) {
+          toast({
+            title: language === "ar" ? "الإعداد غير مكتمل" : "Missing configuration",
+            description:
+              language === "ar"
+                ? "اتصال Supabase غير معد لميزة المدرب الذكي."
+                : "Supabase is not configured for AI Coach.",
+            variant: "destructive",
+          });
+          return;
+        }
+
+        const resp = await fetch(request.url, {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
-            Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
+            ...request.headers,
           },
           body: JSON.stringify({ messages: chatMessages, language }),
         });

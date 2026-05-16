@@ -1,4 +1,4 @@
-import { lazy, Suspense } from "react";
+import { lazy, Suspense, useEffect } from "react";
 import { Toaster } from "@/original/components/ui/toaster";
 import { Toaster as Sonner } from "@/original/components/ui/sonner";
 import { TooltipProvider } from "@/original/components/ui/tooltip";
@@ -38,11 +38,11 @@ const MiniGamesPage = lazy(() => import("./pages/MiniGamesPage"));
 const NotFound = lazy(() => import("./pages/NotFound"));
 
 const App = () => {
-  // Initialize theme from localStorage
-  if (typeof window !== "undefined") {
+  useEffect(() => {
     const savedTheme = localStorage.getItem("theme") || "dark";
+    document.documentElement.classList.remove("light", "dark", "system");
     document.documentElement.classList.add(savedTheme);
-  }
+  }, []);
 
   return (
     <LanguageProvider>
