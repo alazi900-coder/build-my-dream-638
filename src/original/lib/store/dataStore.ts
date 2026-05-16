@@ -9,7 +9,8 @@
  */
 
 import { getDB, getStoreCount } from "@/original/lib/db";
-import { supabase } from "@/original/integrations/supabase/client";
+import { hasSupabaseConfig, supabase } from "@/original/integrations/supabase/client";
+import { localSeedData } from "@/original/data/seedData";
 
 // ============================================
 // TYPES
@@ -300,6 +301,42 @@ type StoreName =
   | "games"
   | "pokemon_held_items";
 
+const fallbackDataByStore: Partial<Record<StoreName, readonly unknown[]>> = localSeedData;
+
+function isBrowserOnline(): boolean {
+  return typeof navigator === "undefined" || navigator.onLine;
+}
+
+function getFallbackData<T>(storeName: StoreName): T[] {
+  return [...(fallbackDataByStore[storeName] ?? [])] as T[];
+}
+
+function normalizePokemonStats(
+  stats: Record<string, unknown> | null | undefined,
+): Pokemon["stats"] {
+  const record = stats ?? {};
+  const readStat = (aliases: string[]) => {
+    for (const alias of aliases) {
+      const value = record[alias];
+      if (typeof value === "number" && Number.isFinite(value)) return value;
+      if (typeof value === "string") {
+        const parsed = Number(value);
+        if (Number.isFinite(parsed)) return parsed;
+      }
+    }
+    return 0;
+  };
+
+  return {
+    hp: readStat(["hp"]),
+    atk: readStat(["atk", "attack"]),
+    def: readStat(["def", "defense"]),
+    spa: readStat(["spa", "special_attack", "specialAttack", "sp_atk", "spAtk"]),
+    spd: readStat(["spd", "special_defense", "specialDefense", "sp_def", "spDef"]),
+    spe: readStat(["spe", "speed"]),
+  };
+}
+
 async function fetchFromLocal<T>(storeName: StoreName): Promise<T[]> {
   try {
     const db = await getDB();
@@ -311,10 +348,7 @@ async function fetchFromLocal<T>(storeName: StoreName): Promise<T[]> {
 }
 
 async function fetchFromNetwork<T>(tableName: string): Promise<T[]> {
-  if (!navigator.onLine) {
-    console.warn(`[DataStore] Offline, cannot fetch ${tableName} from network`);
-    return [];
-  }
+  if (!isBrowserOnline() || !hasSupabaseConfig) return [];
 
   try {
     // Use type assertion to handle dynamic table names
@@ -342,8 +376,11 @@ export async function getAllPokemon(): Promise<Pokemon[]> {
   }
 
   let data = await fetchFromLocal<Pokemon>("pokemon");
-  if (data.length === 0 && navigator.onLine) {
+  if (data.length === 0 && isBrowserOnline()) {
     data = await fetchFromNetwork<Pokemon>("pokemon");
+  }
+  if (data.length === 0) {
+    data = getFallbackData<Pokemon>("pokemon");
   }
 
   const map = new Map(
@@ -353,6 +390,7 @@ export async function getAllPokemon(): Promise<Pokemon[]> {
         ...p,
         types: Array.isArray(p.types) ? p.types : [],
         abilities: Array.isArray(p.abilities) ? p.abilities : [],
+        stats: normalizePokemonStats(p.stats),
         tags: Array.isArray(p.tags) ? p.tags : [],
         available_in: Array.isArray(p.available_in) ? p.available_in : [],
       },
@@ -409,8 +447,11 @@ export async function getAllMoves(): Promise<Move[]> {
   }
 
   let data = await fetchFromLocal<Move>("moves");
-  if (data.length === 0 && navigator.onLine) {
+  if (data.length === 0 && isBrowserOnline()) {
     data = await fetchFromNetwork<Move>("moves");
+  }
+  if (data.length === 0) {
+    data = getFallbackData<Move>("moves");
   }
 
   const map = new Map(
@@ -447,8 +488,11 @@ export async function getAllItems(): Promise<Item[]> {
   }
 
   let data = await fetchFromLocal<Item>("items");
-  if (data.length === 0 && navigator.onLine) {
+  if (data.length === 0 && isBrowserOnline()) {
     data = await fetchFromNetwork<Item>("items");
+  }
+  if (data.length === 0) {
+    data = getFallbackData<Item>("items");
   }
 
   const map = new Map(
@@ -486,8 +530,11 @@ export async function getAllLocations(): Promise<Location[]> {
   }
 
   let data = await fetchFromLocal<Location>("locations");
-  if (data.length === 0 && navigator.onLine) {
+  if (data.length === 0 && isBrowserOnline()) {
     data = await fetchFromNetwork<Location>("locations");
+  }
+  if (data.length === 0) {
+    data = getFallbackData<Location>("locations");
   }
 
   const map = new Map(
@@ -519,7 +566,7 @@ export async function getAllEncounters(): Promise<Encounter[]> {
   }
 
   let data = await fetchFromLocal<Encounter>("encounters");
-  if (data.length === 0 && navigator.onLine) {
+  if (data.length === 0 && isBrowserOnline()) {
     data = await fetchFromNetwork<Encounter>("encounters");
   }
 
@@ -547,8 +594,11 @@ export async function getAllGyms(): Promise<Gym[]> {
   }
 
   let data = await fetchFromLocal<Gym>("gyms");
-  if (data.length === 0 && navigator.onLine) {
+  if (data.length === 0 && isBrowserOnline()) {
     data = await fetchFromNetwork<Gym>("gyms");
+  }
+  if (data.length === 0) {
+    data = getFallbackData<Gym>("gyms");
   }
 
   const map = new Map(
@@ -580,7 +630,7 @@ export async function getAllGymRoster(): Promise<GymRoster[]> {
   }
 
   let data = await fetchFromLocal<GymRoster>("gym_roster");
-  if (data.length === 0 && navigator.onLine) {
+  if (data.length === 0 && isBrowserOnline()) {
     data = await fetchFromNetwork<GymRoster>("gym_roster");
   }
 
@@ -603,7 +653,7 @@ export async function getAllNPCs(): Promise<NPC[]> {
   }
 
   let data = await fetchFromLocal<NPC>("npcs");
-  if (data.length === 0 && navigator.onLine) {
+  if (data.length === 0 && isBrowserOnline()) {
     data = await fetchFromNetwork<NPC>("npcs");
   }
 
@@ -627,7 +677,7 @@ export async function getAllLearnsets(): Promise<Learnset[]> {
   }
 
   let data = await fetchFromLocal<Learnset>("learnsets");
-  if (data.length === 0 && navigator.onLine) {
+  if (data.length === 0 && isBrowserOnline()) {
     data = await fetchFromNetwork<Learnset>("learnsets");
   }
 
@@ -655,7 +705,7 @@ export async function getAllEvolutionNodes(): Promise<EvolutionNode[]> {
   }
 
   let data = await fetchFromLocal<EvolutionNode>("evolution_nodes");
-  if (data.length === 0 && navigator.onLine) {
+  if (data.length === 0 && isBrowserOnline()) {
     data = await fetchFromNetwork<EvolutionNode>("evolution_nodes");
   }
 
@@ -678,7 +728,7 @@ export async function getAllGames(): Promise<Game[]> {
   }
 
   let data = await fetchFromLocal<Game>("games");
-  if (data.length === 0 && navigator.onLine) {
+  if (data.length === 0 && isBrowserOnline()) {
     data = await fetchFromNetwork<Game>("games");
   }
 
@@ -704,7 +754,7 @@ export async function getAllPokemonHeldItems(): Promise<PokemonHeldItem[]> {
   }
 
   let data = await fetchFromLocal<PokemonHeldItem>("pokemon_held_items");
-  if (data.length === 0 && navigator.onLine) {
+  if (data.length === 0 && isBrowserOnline()) {
     data = await fetchFromNetwork<PokemonHeldItem>("pokemon_held_items");
   }
 
