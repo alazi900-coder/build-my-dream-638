@@ -1,33 +1,15 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import {
-  Outlet,
-  Link,
   createRootRouteWithContext,
   useRouter,
   HeadContent,
   Scripts,
 } from "@tanstack/react-router";
-import { Bot, BookOpen, Compass, Menu } from "lucide-react";
+import { OriginalClientApp } from "@/original/ClientApp";
 import appCss from "../styles.css?url";
-import { I18nProvider } from "@/lib/i18n/context";
-import { GameFilterProvider } from "@/lib/gameFilter";
-import { Header } from "@/components/Header";
 
 function NotFoundComponent() {
-  return (
-    <div className="flex min-h-screen items-center justify-center bg-background px-4">
-      <div className="max-w-md text-center">
-        <h1 className="text-7xl font-bold">404</h1>
-        <p className="mt-4 text-muted-foreground">Page not found</p>
-        <Link
-          to="/"
-          className="mt-6 inline-block rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90"
-        >
-          Home
-        </Link>
-      </div>
-    </div>
-  );
+  return <OriginalClientApp />;
 }
 
 function ErrorComponent({ error, reset }: { error: Error; reset: () => void }) {
@@ -111,48 +93,7 @@ function RootComponent() {
   const { queryClient } = Route.useRouteContext();
   return (
     <QueryClientProvider client={queryClient}>
-      <I18nProvider>
-        <GameFilterProvider>
-          <div className="flex min-h-screen flex-col bg-background">
-            <Header />
-            <main className="flex-1 pb-28 md:pb-8">
-              <Outlet />
-            </main>
-            <BottomNav />
-          </div>
-        </GameFilterProvider>
-      </I18nProvider>
+      <OriginalClientApp />
     </QueryClientProvider>
-  );
-}
-
-function BottomNav() {
-  const items = [
-    { to: "/", label: "الدليل", icon: BookOpen, exact: true },
-    { to: "/types", label: "الاستكشاف", icon: Compass },
-    { to: "/items", label: "المدرب", icon: Bot },
-    { to: "/about", label: "المزيد", icon: Menu },
-  ] as const;
-
-  return (
-    <nav className="fixed inset-x-0 bottom-0 z-40 border-t border-border bg-card/95 px-4 pb-4 pt-2 shadow-[0_-8px_24px_rgba(15,23,42,0.08)] backdrop-blur md:hidden">
-      <div className="mx-auto grid max-w-md grid-cols-4 gap-1">
-        {items.map((item) => {
-          const Icon = item.icon;
-          return (
-            <Link
-              key={item.to}
-              to={item.to}
-              activeOptions={{ exact: item.exact }}
-              className="flex flex-col items-center gap-1 rounded-2xl px-2 py-1.5 text-xs font-bold text-muted-foreground"
-              activeProps={{ className: "bg-primary/10 text-primary" }}
-            >
-              <Icon className="h-6 w-6" />
-              <span>{item.label}</span>
-            </Link>
-          );
-        })}
-      </div>
-    </nav>
   );
 }

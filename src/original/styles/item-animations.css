@@ -1,0 +1,311 @@
+/* Item Category Animations */
+
+/* Float up animation for particles */
+@keyframes float-up {
+  0%,
+  100% {
+    transform: translateY(0);
+    opacity: 0;
+  }
+  50% {
+    transform: translateY(-50px);
+    opacity: 1;
+  }
+}
+
+/* HP pulse for low health indicator */
+@keyframes hp-pulse {
+  0%,
+  100% {
+    opacity: 1;
+    transform: scaleX(1);
+  }
+  50% {
+    opacity: 0.5;
+    transform: scaleX(0.95);
+  }
+}
+
+.animate-hp-pulse {
+  animation: hp-pulse 0.8s ease-in-out infinite;
+}
+
+/* HP fill animation */
+@keyframes hp-fill {
+  0% {
+    width: 20%;
+  }
+  100% {
+    width: 100%;
+  }
+}
+
+.animate-hp-fill {
+  animation: hp-fill 2s ease-out infinite;
+}
+
+/* Stat up arrow animation */
+@keyframes stat-up {
+  0%,
+  100% {
+    transform: translateY(0);
+    opacity: 0.7;
+  }
+  50% {
+    transform: translateY(-10px);
+    opacity: 1;
+  }
+}
+
+.animate-stat-up {
+  animation: stat-up 1s ease-in-out infinite;
+}
+
+/* Sparkle animation */
+@keyframes sparkle {
+  0%,
+  100% {
+    transform: scale(0) rotate(0deg);
+    opacity: 0;
+  }
+  50% {
+    transform: scale(1) rotate(180deg);
+    opacity: 1;
+  }
+}
+
+.animate-sparkle {
+  animation: sparkle 1.5s ease-in-out infinite;
+}
+
+/* Ring expand for evolution */
+@keyframes ring-expand {
+  0% {
+    transform: scale(0.5);
+    opacity: 1;
+  }
+  100% {
+    transform: scale(3);
+    opacity: 0;
+  }
+}
+
+.animate-ring-expand {
+  animation: ring-expand 2s ease-out infinite;
+}
+
+/* Silhouette animation */
+@keyframes silhouette {
+  0%,
+  100% {
+    transform: scale(1);
+    opacity: 0.4;
+  }
+  50% {
+    transform: scale(1.2);
+    opacity: 0.7;
+  }
+}
+
+.animate-silhouette {
+  animation: silhouette 1.5s ease-in-out infinite;
+}
+
+/* Twinkle animation */
+@keyframes twinkle {
+  0%,
+  100% {
+    opacity: 0.3;
+    transform: scale(0.8);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1.2);
+  }
+}
+
+.animate-twinkle {
+  animation: twinkle 1s ease-in-out infinite;
+}
+
+/* Stat pulse for held items */
+@keyframes stat-pulse {
+  0%,
+  100% {
+    transform: scale(1);
+    opacity: 0.7;
+  }
+  50% {
+    transform: scale(1.1);
+    opacity: 1;
+  }
+}
+
+.animate-stat-pulse {
+  animation: stat-pulse 1s ease-in-out infinite;
+}
+
+/* Ball shake animation */
+@keyframes ball-shake {
+  0%,
+  100% {
+    transform: rotate(0deg);
+  }
+  25% {
+    transform: rotate(-15deg);
+  }
+  50% {
+    transform: rotate(0deg);
+  }
+  75% {
+    transform: rotate(15deg);
+  }
+}
+
+.animate-ball-shake {
+  animation: ball-shake 0.5s ease-in-out 3;
+  animation-delay: 0.5s;
+}
+
+/* Capture sparkle */
+@keyframes capture-sparkle {
+  0% {
+    transform: scale(0);
+    opacity: 0;
+  }
+  50% {
+    transform: scale(1.5);
+    opacity: 1;
+  }
+  100% {
+    transform: scale(0);
+    opacity: 0;
+  }
+}
+
+.animate-capture-sparkle {
+  animation: capture-sparkle 0.5s ease-out forwards;
+}
+
+/* Power surge for type enhancement */
+@keyframes power-surge {
+  0% {
+    transform: scale(0.8);
+    opacity: 0;
+  }
+  50% {
+    opacity: 1;
+  }
+  100% {
+    transform: scale(1.5);
+    opacity: 0;
+  }
+}
+
+.animate-power-surge {
+  animation: power-surge 2s ease-out infinite;
+}
+
+/* Stat bar grow for vitamins */
+@keyframes stat-bar-grow {
+  0% {
+    transform: scaleY(0);
+    transform-origin: bottom;
+  }
+  100% {
+    transform: scaleY(1);
+    transform-origin: bottom;
+  }
+}
+
+.animate-stat-bar-grow {
+  animation: stat-bar-grow 1s ease-out infinite;
+}
+
+/* Key shimmer */
+@keyframes key-shimmer {
+  0%,
+  100% {
+    filter: brightness(1);
+    transform: rotate(-5deg);
+  }
+  50% {
+    filter: brightness(1.5);
+    transform: rotate(5deg);
+  }
+}
+
+.animate-key-shimmer {
+  animation: key-shimmer 2s ease-in-out infinite;
+}
+
+/* Disc spin for TMs */
+@keyframes disc-spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.animate-disc-spin {
+  animation: disc-spin 3s linear infinite;
+}
+
+/* Data flow for machines */
+@keyframes data-flow {
+  0% {
+    transform: translateY(100%);
+    opacity: 0;
+  }
+  50% {
+    opacity: 1;
+  }
+  100% {
+    transform: translateY(-100%);
+    opacity: 0;
+  }
+}
+
+.animate-data-flow {
+  animation: data-flow 1.5s linear infinite;
+}
+
+/* ============ REDUCED MOTION ACCESSIBILITY ============ */
+@media (prefers-reduced-motion: reduce) {
+  /* Disable all item category animations */
+  .animate-hp-pulse,
+  .animate-hp-fill,
+  .animate-stat-up,
+  .animate-sparkle,
+  .animate-ring-expand,
+  .animate-silhouette,
+  .animate-twinkle,
+  .animate-stat-pulse,
+  .animate-ball-shake,
+  .animate-capture-sparkle,
+  .animate-power-surge,
+  .animate-stat-bar-grow,
+  .animate-key-shimmer,
+  .animate-disc-spin,
+  .animate-data-flow {
+    animation: none !important;
+    transition: none !important;
+  }
+
+  /* Keep static visual appearance */
+  .animate-hp-fill {
+    width: 100%;
+  }
+
+  .animate-stat-bar-grow {
+    transform: scaleY(1);
+  }
+
+  .animate-silhouette,
+  .animate-twinkle,
+  .animate-stat-pulse {
+    opacity: 0.7;
+  }
+}

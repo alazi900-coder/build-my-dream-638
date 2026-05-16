@@ -13,8 +13,13 @@ function ItemDetailPage() {
   if (!item) {
     return (
       <div className="mx-auto max-w-3xl px-4 py-16 text-center">
-        <h1 className="text-2xl font-bold">{lang === "ar" ? "أداة غير موجودة" : "Item not found"}</h1>
-        <Link to="/items" className="mt-4 inline-block rounded-md bg-primary px-4 py-2 text-sm text-primary-foreground">
+        <h1 className="text-2xl font-bold">
+          {lang === "ar" ? "أداة غير موجودة" : "Item not found"}
+        </h1>
+        <Link
+          to="/items"
+          className="mt-4 inline-block rounded-md bg-primary px-4 py-2 text-sm text-primary-foreground"
+        >
           {lang === "ar" ? "العودة للأدوات" : "Back to items"}
         </Link>
       </div>
@@ -23,11 +28,16 @@ function ItemDetailPage() {
 
   const name = lang === "ar" ? item.name_ar : item.name_en;
   const desc = lang === "ar" ? item.description_ar : item.description_en;
-  const availableIn = GAMES.filter((g) => g.id !== "all" && GAME_ITEM_IDS[g.id as Exclude<typeof g.id, "all">].includes(item.id));
+  const availableIn = GAMES.filter(
+    (g) => g.id !== "all" && GAME_ITEM_IDS[g.id as Exclude<typeof g.id, "all">].includes(item.id),
+  );
 
   return (
     <div className="mx-auto max-w-3xl px-4 py-6">
-      <Link to="/items" className="mb-4 inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground">
+      <Link
+        to="/items"
+        className="mb-4 inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground"
+      >
         <ArrowRight className="h-4 w-4 rtl:rotate-180" />
         {lang === "ar" ? "العودة" : "Back"}
       </Link>
@@ -39,21 +49,32 @@ function ItemDetailPage() {
           </div>
           <div className="flex-1 text-center sm:text-start">
             <h1 className="text-2xl font-bold">{name}</h1>
-            <p className="mt-1 text-sm text-muted-foreground">{lang === "ar" ? item.name_en : item.name_ar}</p>
-            <span className="mt-2 inline-block rounded-full bg-muted px-3 py-0.5 text-xs uppercase">{item.category}</span>
+            <p className="mt-1 text-sm text-muted-foreground">
+              {lang === "ar" ? item.name_en : item.name_ar}
+            </p>
+            <span className="mt-2 inline-block rounded-full bg-muted px-3 py-0.5 text-xs uppercase">
+              {item.category}
+            </span>
           </div>
         </div>
 
         <div className="mt-6">
-          <h2 className="mb-2 text-sm font-bold text-muted-foreground">{lang === "ar" ? "الوصف" : "Description"}</h2>
+          <h2 className="mb-2 text-sm font-bold text-muted-foreground">
+            {lang === "ar" ? "الوصف" : "Description"}
+          </h2>
           <p className="text-base leading-relaxed">{desc}</p>
         </div>
 
         <div className="mt-6">
-          <h2 className="mb-2 text-sm font-bold text-muted-foreground">{lang === "ar" ? "متاحة في" : "Available in"}</h2>
+          <h2 className="mb-2 text-sm font-bold text-muted-foreground">
+            {lang === "ar" ? "متاحة في" : "Available in"}
+          </h2>
           <div className="flex flex-wrap gap-2">
             {availableIn.map((g) => (
-              <span key={g.id} className={`rounded-full px-3 py-1 text-xs font-medium text-white ${g.accent}`}>
+              <span
+                key={g.id}
+                className={`rounded-full px-3 py-1 text-xs font-medium text-white ${g.accent}`}
+              >
                 {lang === "ar" ? g.fullNameAr : g.fullNameEn}
               </span>
             ))}

@@ -41,10 +41,15 @@ export function EvolutionChain({
         <div key={i} className="flex items-center gap-3">
           <div className="flex flex-col gap-2">
             {stage.map((p) => {
-              const name = lang === "ar" ? p.name_ar ?? p.name_en : p.name_en;
+              const name = lang === "ar" ? (p.name_ar ?? p.name_en) : p.name_en;
               const condition = evolutions.find((e) => e.to_pokemon_id === p.id);
               return (
-                <Link key={p.id} to="/pokemon/$id" params={{ id: String(p.id) }} className="group flex flex-col items-center rounded-xl border border-border bg-card p-2 hover:bg-accent">
+                <Link
+                  key={p.id}
+                  to="/pokemon/$id"
+                  params={{ id: String(p.id) }}
+                  className="group flex flex-col items-center rounded-xl border border-border bg-card p-2 hover:bg-accent"
+                >
                   {p.sprite_url && <img src={p.sprite_url} alt={name} className="h-16 w-16" />}
                   <span className="text-sm font-semibold">{name}</span>
                   {condition?.min_level && (
@@ -57,7 +62,9 @@ export function EvolutionChain({
               );
             })}
           </div>
-          {i < stages.length - 1 && <ArrowRight className="h-5 w-5 text-muted-foreground rtl:rotate-180" />}
+          {i < stages.length - 1 && (
+            <ArrowRight className="h-5 w-5 text-muted-foreground rtl:rotate-180" />
+          )}
         </div>
       ))}
     </div>

@@ -5,11 +5,24 @@ import { createFileRoute } from "@tanstack/react-router";
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
 
 const TYPE_TRANSLATE: Record<string, string> = {
-  normal: "عادي", fire: "نار", water: "ماء", electric: "كهرباء",
-  grass: "نبات", ice: "جليد", fighting: "قتال", poison: "سم",
-  ground: "أرض", flying: "طيران", psychic: "نفسي", bug: "حشرة",
-  rock: "صخر", ghost: "شبح", dragon: "تنين", dark: "ظلام",
-  steel: "فولاذ", fairy: "جنية",
+  normal: "عادي",
+  fire: "نار",
+  water: "ماء",
+  electric: "كهرباء",
+  grass: "نبات",
+  ice: "جليد",
+  fighting: "قتال",
+  poison: "سم",
+  ground: "أرض",
+  flying: "طيران",
+  psychic: "نفسي",
+  bug: "حشرة",
+  rock: "صخر",
+  ghost: "شبح",
+  dragon: "تنين",
+  dark: "ظلام",
+  steel: "فولاذ",
+  fairy: "جنية",
 };
 
 function genFromId(id: number): number {
@@ -76,13 +89,10 @@ async function fetchJson<T>(url: string): Promise<T> {
 }
 
 async function syncOne(id: number) {
-  const poke = await fetchJson<PokeApiPokemon>(
-    `https://pokeapi.co/api/v2/pokemon/${id}`
-  );
+  const poke = await fetchJson<PokeApiPokemon>(`https://pokeapi.co/api/v2/pokemon/${id}`);
   const species = await fetchJson<PokeApiSpecies>(poke.species.url);
 
-  const enEntry =
-    species.flavor_text_entries.find((f) => f.language.name === "en") ?? null;
+  const enEntry = species.flavor_text_entries.find((f) => f.language.name === "en") ?? null;
 
   const stats: Record<string, number> = {};
   for (const s of poke.stats) stats[s.stat.name] = s.base_stat;
@@ -98,9 +108,7 @@ async function syncOne(id: number) {
   }
 
   const nameEn = poke.name.charAt(0).toUpperCase() + poke.name.slice(1);
-  const description_en = enEntry
-    ? enEntry.flavor_text.replace(/[\f\n\r]/g, " ")
-    : null;
+  const description_en = enEntry ? enEntry.flavor_text.replace(/[\f\n\r]/g, " ") : null;
 
   const row = {
     id: poke.id,
@@ -111,8 +119,7 @@ async function syncOne(id: number) {
     height: poke.height,
     weight: poke.weight,
     sprite_url: poke.sprites.front_default,
-    artwork_url:
-      poke.sprites.other?.["official-artwork"]?.front_default ?? null,
+    artwork_url: poke.sprites.other?.["official-artwork"]?.front_default ?? null,
     stats,
     abilities,
     description_en,
@@ -175,7 +182,10 @@ export const Route = createFileRoute("/api/public/sync-pokemon")({
       GET: async ({ request }) => {
         const url = new URL(request.url);
         const offset = Math.max(0, parseInt(url.searchParams.get("offset") ?? "0", 10));
-        const limit = Math.min(50, Math.max(1, parseInt(url.searchParams.get("limit") ?? "25", 10)));
+        const limit = Math.min(
+          50,
+          Math.max(1, parseInt(url.searchParams.get("limit") ?? "25", 10)),
+        );
         const max = Math.min(386, offset + limit);
 
         const errors: { id: number; error: string }[] = [];

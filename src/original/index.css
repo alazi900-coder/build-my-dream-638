@@ -1,0 +1,227 @@
+@import url("https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&display=swap");
+@import url("https://fonts.googleapis.com/css2?family=Lora:wght@400;500;600;700&display=swap");
+@import url("https://fonts.googleapis.com/css2?family=Space+Mono:ital,wght@0,400;0,700;1,400;1,700&display=swap");
+@import url("https://fonts.googleapis.com/css2?family=Noto+Kufi+Arabic:wght@400;500;600;700&display=swap");
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Pokémon Shield Theme - Dark Mode First */
+
+@layer base {
+  :root {
+    /* Light mode - Shield Purple/Blue theme */
+    --background: 240 20% 96%;
+    --foreground: 240 30% 10%;
+
+    --card: 0 0% 100%;
+    --card-foreground: 240 30% 10%;
+
+    --popover: 0 0% 100%;
+    --popover-foreground: 240 30% 10%;
+
+    /* Shield Purple as primary */
+    --primary: 265 60% 45%;
+    --primary-foreground: 0 0% 100%;
+
+    /* Shield Blue as secondary */
+    --secondary: 220 70% 50%;
+    --secondary-foreground: 0 0% 100%;
+
+    --muted: 240 15% 90%;
+    --muted-foreground: 240 10% 40%;
+
+    /* Gold accent */
+    --accent: 45 90% 50%;
+    --accent-foreground: 240 30% 10%;
+
+    --destructive: 0 70% 50%;
+    --destructive-foreground: 0 0% 98%;
+
+    --border: 240 15% 85%;
+    --input: 240 15% 85%;
+    --ring: 265 60% 45%;
+
+    --radius: 0.5rem;
+
+    --sidebar-background: 240 20% 98%;
+    --sidebar-foreground: 240 30% 10%;
+    --sidebar-primary: 265 60% 45%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 240 15% 92%;
+    --sidebar-accent-foreground: 240 30% 10%;
+    --sidebar-border: 240 15% 85%;
+    --sidebar-ring: 265 60% 45%;
+
+    --chart-1: 265 60% 45%;
+    --chart-2: 220 70% 50%;
+    --chart-3: 45 90% 50%;
+    --chart-4: 160 60% 45%;
+    --chart-5: 0 70% 50%;
+
+    --sidebar: 240 20% 98%;
+
+    --font-sans: "Space Grotesk", ui-sans-serif, system-ui, sans-serif;
+    --font-serif: "Lora", ui-serif, Georgia, serif;
+    --font-mono: "Space Mono", ui-monospace, monospace;
+    --font-arabic: "Noto Kufi Arabic", "Space Grotesk", sans-serif;
+
+    --shadow-2xs: 1px 1px 0px 0px hsl(265 60% 45% / 0.2);
+    --shadow-xs: 2px 2px 0px 0px hsl(265 60% 45% / 0.2);
+    --shadow-sm: 3px 3px 0px 0px hsl(265 60% 45% / 0.15);
+    --shadow: 4px 4px 0px 0px hsl(265 60% 45% / 0.15);
+    --shadow-md: 6px 6px 0px 0px hsl(265 60% 45% / 0.1);
+    --shadow-lg: 8px 8px 0px 0px hsl(265 60% 45% / 0.1);
+    --shadow-xl: 12px 12px 0px 0px hsl(265 60% 45% / 0.1);
+    --shadow-2xl: 16px 16px 0px 0px hsl(265 60% 45% / 0.1);
+
+    --tracking-normal: 0em;
+    --spacing: 0.25rem;
+  }
+
+  .dark {
+    /* Dark mode - Pokémon Shield Deep Purple/Blue */
+    --background: 240 20% 8%;
+    --foreground: 0 0% 98%;
+
+    --card: 240 20% 12%;
+    --card-foreground: 0 0% 98%;
+
+    --popover: 240 20% 10%;
+    --popover-foreground: 0 0% 98%;
+
+    /* Shield Cyan/Purple as primary */
+    --primary: 280 80% 70%;
+    --primary-foreground: 240 20% 8%;
+
+    /* Shield Blue */
+    --secondary: 220 70% 60%;
+    --secondary-foreground: 0 0% 100%;
+
+    --muted: 240 15% 18%;
+    --muted-foreground: 240 10% 75%;
+
+    /* Gold accent for dark mode */
+    --accent: 45 100% 55%;
+    --accent-foreground: 240 20% 8%;
+
+    --destructive: 0 65% 50%;
+    --destructive-foreground: 0 0% 100%;
+
+    --border: 240 15% 25%;
+    --input: 240 15% 20%;
+    --ring: 280 80% 65%;
+
+    --sidebar-background: 240 20% 10%;
+    --sidebar-foreground: 0 0% 95%;
+    --sidebar-primary: 280 80% 65%;
+    --sidebar-primary-foreground: 240 20% 8%;
+    --sidebar-accent: 240 15% 20%;
+    --sidebar-accent-foreground: 0 0% 95%;
+    --sidebar-border: 240 15% 25%;
+    --sidebar-ring: 280 80% 65%;
+
+    --chart-1: 280 80% 65%;
+    --chart-2: 220 70% 55%;
+    --chart-3: 45 100% 55%;
+    --chart-4: 160 70% 50%;
+    --chart-5: 0 70% 55%;
+
+    --sidebar: 240 20% 10%;
+
+    --radius: 0.5rem;
+
+    --shadow-2xs: 1px 1px 0px 0px hsl(280 80% 65% / 0.3);
+    --shadow-xs: 2px 2px 0px 0px hsl(280 80% 65% / 0.25);
+    --shadow-sm: 3px 3px 0px 0px hsl(280 80% 65% / 0.2);
+    --shadow: 4px 4px 0px 0px hsl(280 80% 65% / 0.2);
+    --shadow-md: 6px 6px 0px 0px hsl(280 80% 65% / 0.15);
+    --shadow-lg: 8px 8px 0px 0px hsl(280 80% 65% / 0.1);
+    --shadow-xl: 12px 12px 0px 0px hsl(280 80% 65% / 0.1);
+    --shadow-2xl: 16px 16px 0px 0px hsl(280 80% 65% / 0.1);
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-background text-foreground;
+  }
+
+  /* RTL Support for Arabic */
+  [dir="rtl"] {
+    font-family: var(--font-arabic);
+  }
+
+  [dir="rtl"] .font-mono {
+    font-family: var(--font-mono);
+  }
+
+  /* Fix tables in RTL */
+  [dir="rtl"] table {
+    text-align: right;
+  }
+
+  [dir="rtl"] th,
+  [dir="rtl"] td {
+    text-align: inherit;
+  }
+
+  /* Keep numbers LTR in RTL mode */
+  [dir="rtl"] .ltr-number,
+  [dir="rtl"] [dir="ltr"] {
+    direction: ltr;
+    unicode-bidi: embed;
+  }
+}
+
+/* Font Size Settings */
+:root[data-font-size="small"] {
+  font-size: 14px;
+}
+:root[data-font-size="medium"] {
+  font-size: 16px;
+}
+:root[data-font-size="large"] {
+  font-size: 18px;
+}
+:root[data-font-size="xlarge"] {
+  font-size: 20px;
+}
+
+@layer utilities {
+  /* Scrollbar hide utility */
+  .scrollbar-hide {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+
+  .scrollbar-hide::-webkit-scrollbar {
+    display: none;
+  }
+
+  /* Pixelated images */
+  .pixelated {
+    image-rendering: pixelated;
+    image-rendering: -moz-crisp-edges;
+    image-rendering: crisp-edges;
+  }
+
+  /* Gradient text */
+  .text-gradient-pokemon {
+    @apply bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-background text-foreground;
+  }
+}
