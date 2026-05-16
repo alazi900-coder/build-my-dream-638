@@ -103,6 +103,7 @@ export const translations: Record<Lang, Dict> = {
     tagline: "Your complete guide to the world of Pokémon",
     nav: {
       pokedex: "Pokédex",
+      items: "Items",
       types: "Types",
       about: "About",
     },
