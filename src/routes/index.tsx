@@ -16,6 +16,7 @@ export const Route = createFileRoute("/")({ component: PokedexPage });
 function PokedexPage() {
   const { t, lang } = useI18n();
   const navigate = useNavigate();
+  const { game } = useGameFilter();
   const [q, setQ] = useState("");
   const [type, setType] = useState<string>("");
   const [gen, setGen] = useState<string>("");
