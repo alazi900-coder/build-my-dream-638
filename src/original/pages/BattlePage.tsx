@@ -514,7 +514,7 @@ export default function BattlePage() {
           const updatedTeam = [...prev.playerTeam];
           const active = { ...updatedTeam[prev.playerActiveIndex] };
           if (active.status) {
-            active.status = updateStatusState(active.status);
+            active.status = normalizeStatus(updateStatusState(active.status));
           }
           updatedTeam[prev.playerActiveIndex] = active;
           return { ...prev, playerTeam: updatedTeam };
@@ -649,7 +649,7 @@ export default function BattlePage() {
         } else {
           // Update enemy status state at end of turn
           if (updatedEnemy.status) {
-            updatedEnemy.status = updateStatusState(updatedEnemy.status);
+            updatedEnemy.status = normalizeStatus(updateStatusState(updatedEnemy.status));
           }
         }
 
@@ -761,7 +761,7 @@ export default function BattlePage() {
             } else {
               // Update player status state at end of turn
               if (updatedPlayer.status) {
-                updatedPlayer.status = updateStatusState(updatedPlayer.status);
+                updatedPlayer.status = normalizeStatus(updateStatusState(updatedPlayer.status));
               }
             }
 
@@ -770,7 +770,7 @@ export default function BattlePage() {
 
           // Update enemy status state
           if (enemyPokemon.status) {
-            enemyPokemon.status = updateStatusState(enemyPokemon.status);
+            enemyPokemon.status = normalizeStatus(updateStatusState(enemyPokemon.status));
           }
           newEnemyTeam[newEnemyActiveIndex] = enemyPokemon;
         }
