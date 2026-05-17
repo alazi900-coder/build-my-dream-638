@@ -1211,20 +1211,20 @@ export default function BattlePage() {
         {battleState.status === "setup" && (
           <BattleTeamBuilder
             format={format === "6v6" ? "6v6" : format}
-            pokemon={pokemon.map((p: any) => ({
-              id: p.id,
-              name_en: p.name_en,
-              name_ar: p.name_ar || p.name_en,
-              types: Array.isArray(p.types) ? p.types : ["normal"],
-              stats: p.stats,
+            pokemon={safePokemon.map((p: any) => ({
+              id: safeNumber(p?.id, 0),
+              name_en: safeString(p?.name_en, "Unknown"),
+              name_ar: safeString(p?.name_ar, safeString(p?.name_en, "غير معروف")),
+              types: Array.isArray(p?.types) && p.types.length > 0 ? p.types.filter(Boolean) : ["normal"],
+              stats: p?.stats ?? DEFAULT_STATS,
             }))}
-            moves={moves.map((m: any) => ({
-              id: m.id,
-              name_en: m.name_en,
-              name_ar: m.name_ar || m.name_en,
-              type: m.type || "normal",
-              power: m.power,
-              category: m.category || "physical",
+            moves={safeMoves.map((m: any) => ({
+              id: safeNumber(m?.id, -1),
+              name_en: safeString(m?.name_en, "Tackle"),
+              name_ar: safeString(m?.name_ar, safeString(m?.name_en, "ضربة")),
+              type: safeString(m?.type, "normal"),
+              power: m?.power == null ? null : safeNumber(m.power, 40),
+              category: safeString(m?.category, "physical"),
             }))}
             onTeamReady={startCustomBattle}
             onCancel={resetBattle}
