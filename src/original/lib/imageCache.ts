@@ -219,25 +219,25 @@ export function getPokemonAnimatedSpriteUrl(pokemonId: number | null | undefined
  * Generate animated Pokemon sprite URL from Showdown (wider coverage)
  * Works for all Pokemon including newer generations
  */
-export function getPokemonShowdownSpriteUrl(pokemonName: string): string {
-  const name = pokemonName.toLowerCase().replace(/[^a-z0-9]/g, "");
+export function getPokemonShowdownSpriteUrl(pokemonName: string | null | undefined): string {
+  const name = safeString(pokemonName, "missingno").toLowerCase().replace(/[^a-z0-9]/g, "");
   return `https://play.pokemonshowdown.com/sprites/ani/${name}.gif`;
 }
 
 /**
  * Generate shiny animated Pokemon sprite URL from Showdown
  */
-export function getPokemonShowdownShinySpriteUrl(pokemonName: string): string {
-  const name = pokemonName.toLowerCase().replace(/[^a-z0-9]/g, "");
+export function getPokemonShowdownShinySpriteUrl(pokemonName: string | null | undefined): string {
+  const name = safeString(pokemonName, "missingno").toLowerCase().replace(/[^a-z0-9]/g, "");
   return `https://play.pokemonshowdown.com/sprites/ani-shiny/${name}.gif`;
 }
 
 /**
  * Generate item sprite URL
  */
-export function getItemSpriteUrl(itemName: string): string {
+export function getItemSpriteUrl(itemName: string | null | undefined): string {
   // Convert name to lowercase and replace spaces with hyphens
-  const slug = itemName
+  const slug = safeString(itemName, "poke-ball")
     .toLowerCase()
     .replace(/\s+/g, "-")
     .replace(/[^a-z0-9-]/g, "");
@@ -247,7 +247,7 @@ export function getItemSpriteUrl(itemName: string): string {
 /**
  * Generate type icon URL (for move type icons)
  */
-export function getMoveTypeIconUrl(typeName: string): string {
+export function getMoveTypeIconUrl(typeName: string | null | undefined): string {
   const typeMap: Record<string, number> = {
     normal: 1,
     fighting: 2,
@@ -268,7 +268,7 @@ export function getMoveTypeIconUrl(typeName: string): string {
     dark: 17,
     fairy: 18,
   };
-  const typeId = typeMap[typeName.toLowerCase()] || 1;
+  const typeId = typeMap[safeString(typeName, "normal").toLowerCase()] || 1;
   return `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/types/generation-viii/sword-shield/${typeId}.png`;
 }
 
