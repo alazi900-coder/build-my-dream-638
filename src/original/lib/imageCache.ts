@@ -27,7 +27,7 @@ async function findInCaches(url: string): Promise<Response | null> {
 
   // Fallback to legacy cache
   const legacyCache = await caches.open(LEGACY_CACHE_NAME);
-  return await legacyCache.match(url);
+  return (await legacyCache.match(url)) ?? null;
 }
 
 /**
