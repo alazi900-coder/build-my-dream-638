@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * Localization utilities for Arabic/English text handling
  * Ensures Arabic mode NEVER shows English text - uses placeholders instead

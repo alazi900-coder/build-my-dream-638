@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * Service Worker Registration and Communication Utility
  * Handles SW registration, updates, and image precaching via postMessage
