@@ -195,7 +195,9 @@ export default function BattlePage() {
   });
 
   const isLoading = pokemonLoading || movesLoading;
-  const hasData = pokemon.length > 0 && moves.length > 0;
+  const safePokemon = Array.isArray(pokemon) ? pokemon : [];
+  const safeMoves = Array.isArray(moves) ? moves : [];
+  const hasData = safePokemon.length > 0 && safeMoves.length > 0;
   const canBattle = hasData;
 
   // Generate training tips based on current battle state
@@ -208,11 +210,11 @@ export default function BattlePage() {
     if (!playerActive || !enemyActive) return [];
 
     return generateTrainingTips({
-      playerTypes: playerActive.types,
-      enemyTypes: enemyActive.types,
-      playerHpPercent: (playerActive.currentHp / playerActive.maxHp) * 100,
-      enemyHpPercent: (enemyActive.currentHp / enemyActive.maxHp) * 100,
-      availableMoveTypes: playerActive.moves.map((m) => m.type),
+      playerTypes: playerActive.types.length > 0 ? playerActive.types : ["normal"],
+      enemyTypes: enemyActive.types.length > 0 ? enemyActive.types : ["normal"],
+      playerHpPercent: (playerActive.currentHp / Math.max(1, playerActive.maxHp)) * 100,
+      enemyHpPercent: (enemyActive.currentHp / Math.max(1, enemyActive.maxHp)) * 100,
+      availableMoveTypes: playerActive.moves.map((m) => m.type || "normal"),
     });
   }, [
     battleState.status,
