@@ -1,9 +1,16 @@
-// @ts-nocheck
 /**
  * Localization utilities for Arabic/English text handling
  * Ensures Arabic mode NEVER shows English text - uses placeholders instead
  * Includes RTL utilities and direction helpers
  */
+
+type SupportedLanguage = "en" | "ar";
+
+const safeText = (value: string | null | undefined, fallback = ""): string =>
+  typeof value === "string" && value.trim() !== "" ? value : fallback;
+
+const safeKey = (value: string | null | undefined, fallback = ""): string =>
+  safeText(value, fallback).toLowerCase();
 
 // ============================================================
 // RTL UTILITIES - Centralized direction handling
@@ -12,14 +19,14 @@
 /**
  * Check if current language is RTL
  */
-export function isRTL(language: "en" | "ar"): boolean {
+export function isRTL(language: SupportedLanguage): boolean {
   return language === "ar";
 }
 
 /**
  * Get direction attribute value
  */
-export function getDirection(language: "en" | "ar"): "rtl" | "ltr" {
+export function getDirection(language: SupportedLanguage): "rtl" | "ltr" {
   return language === "ar" ? "rtl" : "ltr";
 }
 
@@ -33,7 +40,7 @@ export const LTR_NUMBER_DIR = "ltr" as const;
 /**
  * Format number for display - always LTR in RTL context
  */
-export function formatNumber(num: number | string, language: "en" | "ar"): string {
+export function formatNumber(num: number | string | null | undefined, language: SupportedLanguage): string {
   return String(num);
 }
 
@@ -87,18 +94,19 @@ export const AR_PLACEHOLDERS = {
  * NEVER returns English in Arabic mode
  */
 export function getLocalizedName(
-  nameEn: string,
+  nameEn: string | null | undefined,
   nameAr: string | null | undefined,
-  language: "en" | "ar",
+  language: SupportedLanguage,
 ): string {
+  const englishName = safeText(nameEn, "Unknown");
   if (language === "ar") {
     // Only use Arabic if it exists AND is different from English
-    if (nameAr && nameAr.trim() !== "" && nameAr !== nameEn) {
+    if (nameAr && nameAr.trim() !== "" && nameAr !== englishName) {
       return nameAr;
     }
     return AR_PLACEHOLDERS.name;
   }
-  return nameEn || "Unknown";
+  return englishName;
 }
 
 /**
