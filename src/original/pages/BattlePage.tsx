@@ -376,7 +376,11 @@ export default function BattlePage() {
 
     if (playerTeam.length === 0 || enemyTeam.length === 0) return;
 
-    const firstTurn = determineTurnOrder(playerTeam[0], enemyTeam[0]);
+    const firstPlayer = playerTeam[0];
+    const firstEnemy = enemyTeam[0];
+    if (!firstPlayer || !firstEnemy) return;
+
+    const firstTurn = determineTurnOrder(firstPlayer, firstEnemy);
 
     battleRecordedRef.current = false;
     progressRecordedRef.current = false;
@@ -415,7 +419,11 @@ export default function BattlePage() {
 
       if (playerTeam.length === 0 || enemyTeam.length === 0) return;
 
-      const firstTurn = determineTurnOrder(playerTeam[0], enemyTeam[0]);
+      const firstPlayer = playerTeam[0];
+      const firstEnemy = enemyTeam[0];
+      if (!firstPlayer || !firstEnemy) return;
+
+      const firstTurn = determineTurnOrder(firstPlayer, firstEnemy);
 
       battleRecordedRef.current = false;
       progressRecordedRef.current = false;
