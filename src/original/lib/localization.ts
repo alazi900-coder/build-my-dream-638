@@ -154,7 +154,7 @@ export function getBilingualDisplay(
   }
   return {
     primary: englishName,
-    secondary: hasValidArabic(nameAr, englishName) ? nameAr : null,
+    secondary: hasValidArabic(nameAr, englishName) ? safeText(nameAr) : null,
   };
 }
 
