@@ -320,7 +320,7 @@ export default function BattlePage() {
           name_en: nameEn,
           name_ar: safeString(m.name_ar, nameEn),
           type: safeString(m.type, "normal"),
-          power: m.power == null ? null : safeNumber(m.power, null as unknown as number),
+          power: m.power == null ? null : safeNumber(m.power, 40),
           accuracy: m.accuracy == null ? null : safeNumber(m.accuracy, 100),
           pp: Math.max(1, safeNumber(m.pp, 10)),
           category: safeString(m.category, "physical"),
