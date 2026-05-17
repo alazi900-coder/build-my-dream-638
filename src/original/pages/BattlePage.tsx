@@ -1,4 +1,3 @@
-// @ts-nocheck
 import { useState, useMemo, useCallback, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { useLanguage } from "@/original/contexts/LanguageContext";
@@ -49,7 +48,6 @@ import {
   BATTLE_LABELS,
   STRUGGLE_MOVE,
 } from "@/original/lib/battleUtils";
-import { getLocalizedType } from "@/original/lib/localization";
 import { BattleTeamBuilder } from "@/original/components/battle/BattleTeamBuilder";
 import { BattleArena } from "@/original/components/battle/BattleArena";
 import { BattleLog } from "@/original/components/battle/BattleLog";
@@ -87,6 +85,17 @@ interface BattleState {
 }
 
 type BattleMode = "quick" | "custom";
+
+const DEFAULT_STATS = { hp: 100, atk: 50, def: 50, spa: 50, spd: 50, spe: 50 };
+
+const safeNumber = (value: unknown, fallback = 0): number =>
+  typeof value === "number" && Number.isFinite(value) ? value : fallback;
+
+const safeString = (value: unknown, fallback = ""): string =>
+  typeof value === "string" && value.trim() !== "" ? value : fallback;
+
+const normalizeStatus = (status: StatusState | null | undefined): StatusState | undefined =>
+  status ?? undefined;
 
 // Helper function to format relative time
 function getTimeAgo(timestamp: number, language: "en" | "ar"): string {
