@@ -1,8 +1,13 @@
-// @ts-nocheck
 // Use the same cache name as sw.js for consistency
 const SW_IMAGES_CACHE = "images-v1";
 // Legacy cache name for backwards compatibility
 const LEGACY_CACHE_NAME = "pokemon-images-v3";
+
+const safeString = (value: unknown, fallback = ""): string =>
+  typeof value === "string" && value.trim() !== "" ? value : fallback;
+
+const safePositiveId = (value: unknown, fallback = 1): number =>
+  typeof value === "number" && Number.isFinite(value) && value > 0 ? value : fallback;
 
 /**
  * Get the image cache (prioritize SW cache, fallback to legacy)
@@ -28,20 +33,21 @@ async function findInCaches(url: string): Promise<Response | null> {
 /**
  * Cache a single image URL
  */
-export async function cacheImage(url: string): Promise<boolean> {
+export async function cacheImage(url: string | null | undefined): Promise<boolean> {
   try {
-    if (!url || url.trim() === "") return false;
+    const safeUrl = safeString(url);
+    if (!safeUrl) return false;
 
     const cache = await getCache();
 
     // Check if already cached
-    const cached = await cache.match(url);
+    const cached = await cache.match(safeUrl);
     if (cached) return true;
 
     // Fetch and cache the image
-    const response = await fetch(url, { mode: "cors" });
+    const response = await fetch(safeUrl, { mode: "cors" });
     if (response.ok) {
-      await cache.put(url, response.clone());
+      await cache.put(safeUrl, response.clone());
       return true;
     }
     return false;
@@ -54,9 +60,11 @@ export async function cacheImage(url: string): Promise<boolean> {
 /**
  * Get cached image as blob URL (for offline display)
  */
-export async function getCachedImage(url: string): Promise<string | null> {
+export async function getCachedImage(url: string | null | undefined): Promise<string | null> {
   try {
-    const response = await findInCaches(url);
+    const safeUrl = safeString(url);
+    if (!safeUrl) return null;
+    const response = await findInCaches(safeUrl);
     if (response) {
       const blob = await response.blob();
       return URL.createObjectURL(blob);
