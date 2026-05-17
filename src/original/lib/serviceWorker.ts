@@ -1,4 +1,3 @@
-// @ts-nocheck
 /**
  * Service Worker Registration and Communication Utility
  * Handles SW registration, updates, and image precaching via postMessage
@@ -10,11 +9,17 @@ type UpdateCallback = () => void;
 let swRegistration: ServiceWorkerRegistration | null = null;
 let onUpdateAvailable: UpdateCallback | null = null;
 
+const toSafeNumber = (value: unknown, fallback = 0): number =>
+  typeof value === "number" && Number.isFinite(value) ? value : fallback;
+
+const toSafeString = (value: unknown, fallback = ""): string =>
+  typeof value === "string" ? value : fallback;
+
 /**
  * Register the Service Worker
  */
 export async function registerServiceWorker(): Promise<ServiceWorkerRegistration | null> {
-  if (!("serviceWorker" in navigator)) {
+  if (typeof navigator === "undefined" || !("serviceWorker" in navigator)) {
     console.log("[SW Client] Service Workers not supported");
     return null;
   }
@@ -85,7 +90,8 @@ export function precacheImages(
   onProgress?: ProgressCallback,
 ): Promise<{ success: number; failed: number }> {
   return new Promise((resolve, reject) => {
-    if (!navigator.serviceWorker.controller) {
+    const controller = navigator.serviceWorker.controller;
+    if (!controller) {
       // SW not active yet, fall back to direct caching
       console.log("[SW Client] No active SW, using fallback caching");
       fallbackCacheImages(urls, onProgress).then(resolve).catch(reject);
@@ -97,19 +103,19 @@ export function precacheImages(
       const { type, done, total, failed, success } = event.data || {};
 
       if (type === "PRECACHE_PROGRESS") {
-        onProgress?.(done, total, failed);
+        onProgress?.(toSafeNumber(done), toSafeNumber(total, urls.length), toSafeNumber(failed));
       }
 
       if (type === "PRECACHE_COMPLETE") {
         navigator.serviceWorker.removeEventListener("message", messageHandler);
-        resolve({ success, failed });
+        resolve({ success: toSafeNumber(success), failed: toSafeNumber(failed) });
       }
     };
 
     navigator.serviceWorker.addEventListener("message", messageHandler);
 
     // Send precache request to SW
-    navigator.serviceWorker.controller.postMessage({
+    controller.postMessage({
       type: "PRECACHE_IMAGES",
       urls,
     });
@@ -191,7 +197,8 @@ export async function getCacheStatus(): Promise<{
   static: number;
   version: string;
 } | null> {
-  if (!navigator.serviceWorker.controller) {
+  const controller = navigator.serviceWorker.controller;
+  if (!controller) {
     return null;
   }
 
@@ -200,15 +207,15 @@ export async function getCacheStatus(): Promise<{
       if (event.data?.type === "CACHE_STATUS") {
         navigator.serviceWorker.removeEventListener("message", messageHandler);
         resolve({
-          images: event.data.images,
-          static: event.data.static,
-          version: event.data.version,
+          images: toSafeNumber(event.data.images),
+          static: toSafeNumber(event.data.static),
+          version: toSafeString(event.data.version, "unknown"),
         });
       }
     };
 
     navigator.serviceWorker.addEventListener("message", messageHandler);
-    navigator.serviceWorker.controller.postMessage({ type: "GET_CACHE_STATUS" });
+    controller.postMessage({ type: "GET_CACHE_STATUS" });
 
     // Timeout after 5 seconds
     setTimeout(() => {

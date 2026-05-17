@@ -3,7 +3,7 @@ import { lazy, Suspense, useEffect, useState } from "react";
 const OriginalApp = lazy(() => import("./App"));
 
 export function OriginalClientApp() {
-  const [mounted, setMounted] = useState(() => typeof window !== "undefined");
+  const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
     setMounted(true);

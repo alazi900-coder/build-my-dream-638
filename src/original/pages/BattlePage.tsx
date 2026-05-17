@@ -1,4 +1,3 @@
-// @ts-nocheck
 import { useState, useMemo, useCallback, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { useLanguage } from "@/original/contexts/LanguageContext";
@@ -49,7 +48,6 @@ import {
   BATTLE_LABELS,
   STRUGGLE_MOVE,
 } from "@/original/lib/battleUtils";
-import { getLocalizedType } from "@/original/lib/localization";
 import { BattleTeamBuilder } from "@/original/components/battle/BattleTeamBuilder";
 import { BattleArena } from "@/original/components/battle/BattleArena";
 import { BattleLog } from "@/original/components/battle/BattleLog";
@@ -87,6 +85,17 @@ interface BattleState {
 }
 
 type BattleMode = "quick" | "custom";
+
+const DEFAULT_STATS = { hp: 100, atk: 50, def: 50, spa: 50, spd: 50, spe: 50 };
+
+const safeNumber = (value: unknown, fallback = 0): number =>
+  typeof value === "number" && Number.isFinite(value) ? value : fallback;
+
+const safeString = (value: unknown, fallback = ""): string =>
+  typeof value === "string" && value.trim() !== "" ? value : fallback;
+
+const normalizeStatus = (status: StatusState | null | undefined): StatusState | undefined =>
+  status ?? undefined;
 
 // Helper function to format relative time
 function getTimeAgo(timestamp: number, language: "en" | "ar"): string {
@@ -186,7 +195,9 @@ export default function BattlePage() {
   });
 
   const isLoading = pokemonLoading || movesLoading;
-  const hasData = pokemon.length > 0 && moves.length > 0;
+  const safePokemon = Array.isArray(pokemon) ? pokemon : [];
+  const safeMoves = Array.isArray(moves) ? moves : [];
+  const hasData = safePokemon.length > 0 && safeMoves.length > 0;
   const canBattle = hasData;
 
   // Generate training tips based on current battle state
@@ -199,11 +210,11 @@ export default function BattlePage() {
     if (!playerActive || !enemyActive) return [];
 
     return generateTrainingTips({
-      playerTypes: playerActive.types,
-      enemyTypes: enemyActive.types,
-      playerHpPercent: (playerActive.currentHp / playerActive.maxHp) * 100,
-      enemyHpPercent: (enemyActive.currentHp / enemyActive.maxHp) * 100,
-      availableMoveTypes: playerActive.moves.map((m) => m.type),
+      playerTypes: playerActive.types.length > 0 ? playerActive.types : ["normal"],
+      enemyTypes: enemyActive.types.length > 0 ? enemyActive.types : ["normal"],
+      playerHpPercent: (playerActive.currentHp / Math.max(1, playerActive.maxHp)) * 100,
+      enemyHpPercent: (enemyActive.currentHp / Math.max(1, enemyActive.maxHp)) * 100,
+      availableMoveTypes: playerActive.moves.map((m) => m.type || "normal"),
     });
   }, [
     battleState.status,
@@ -288,32 +299,51 @@ export default function BattlePage() {
 
   // Create a battle Pokemon from data
   const createBattlePokemon = useCallback((poke: any, selectedMoves: any[]): BattlePokemon => {
-    const pokemonStats = poke.stats || { hp: 100, atk: 50, def: 50, spa: 50, spd: 50, spe: 50 };
+    const rawStats = poke?.stats ?? DEFAULT_STATS;
+    const pokemonStats = {
+      hp: safeNumber(rawStats.hp, DEFAULT_STATS.hp),
+      atk: safeNumber(rawStats.atk, DEFAULT_STATS.atk),
+      def: safeNumber(rawStats.def, DEFAULT_STATS.def),
+      spa: safeNumber(rawStats.spa, DEFAULT_STATS.spa),
+      spd: safeNumber(rawStats.spd, DEFAULT_STATS.spd),
+      spe: safeNumber(rawStats.spe, DEFAULT_STATS.spe),
+    };
     const maxHp = Math.max(50, pokemonStats.hp * 2 + 50);
 
-    const battleMoves = selectedMoves.slice(0, 4).map((m) => ({
-      id: m.id,
-      name_en: m.name_en,
-      name_ar: m.name_ar || m.name_en,
-      type: m.type || "normal",
-      power: m.power,
-      accuracy: m.accuracy,
-      pp: m.pp || 10,
-      category: m.category || "physical",
-    }));
+    const battleMoves = selectedMoves
+      .filter(Boolean)
+      .slice(0, 4)
+      .map((m): BattleMove => {
+        const nameEn = safeString(m.name_en, "Tackle");
+        return {
+          id: safeNumber(m.id, -1),
+          name_en: nameEn,
+          name_ar: safeString(m.name_ar, nameEn),
+          type: safeString(m.type, "normal"),
+          power: m.power == null ? null : safeNumber(m.power, 40),
+          accuracy: m.accuracy == null ? null : safeNumber(m.accuracy, 100),
+          pp: Math.max(1, safeNumber(m.pp, 10)),
+          category: safeString(m.category, "physical"),
+        };
+      });
+
+    if (battleMoves.length === 0) {
+      battleMoves.push(STRUGGLE_MOVE as BattleMove);
+    }
 
     // Initialize PP for moves
     const ppMap: Record<string, number> = {};
+    const pokemonId = safeNumber(poke?.id, 0);
     battleMoves.forEach((m) => {
-      ppMap[`${poke.id}-${m.id}`] = m.pp;
+      ppMap[`${pokemonId}-${m.id}`] = m.pp;
     });
     setMovePP((prev) => ({ ...prev, ...ppMap }));
 
     return {
-      id: poke.id,
-      name_en: poke.name_en,
-      name_ar: poke.name_ar || poke.name_en,
-      types: Array.isArray(poke.types) ? poke.types : ["normal"],
+      id: pokemonId,
+      name_en: safeString(poke?.name_en, "Unknown"),
+      name_ar: safeString(poke?.name_ar, safeString(poke?.name_en, "غير معروف")),
+      types: Array.isArray(poke?.types) && poke.types.length > 0 ? poke.types.filter(Boolean) : ["normal"],
       stats: pokemonStats,
       currentHp: maxHp,
       maxHp,
@@ -325,17 +355,17 @@ export default function BattlePage() {
   // Generate random team for quick battle
   const generateRandomTeam = useCallback(
     (count: number): BattlePokemon[] => {
-      if (pokemon.length === 0 || moves.length === 0) return [];
+      if (safePokemon.length === 0 || safeMoves.length === 0) return [];
 
-      const shuffled = [...pokemon].sort(() => Math.random() - 0.5);
+      const shuffled = [...safePokemon].sort(() => Math.random() - 0.5);
       const selected = shuffled.slice(0, count);
 
       return selected.map((poke) => {
-        const pokeMoves = [...moves].sort(() => Math.random() - 0.5).slice(0, 4);
+        const pokeMoves = [...safeMoves].sort(() => Math.random() - 0.5).slice(0, 4);
         return createBattlePokemon(poke, pokeMoves);
       });
     },
-    [pokemon, moves, createBattlePokemon],
+    [safePokemon, safeMoves, createBattlePokemon],
   );
 
   // Start quick battle
@@ -346,7 +376,11 @@ export default function BattlePage() {
 
     if (playerTeam.length === 0 || enemyTeam.length === 0) return;
 
-    const firstTurn = determineTurnOrder(playerTeam[0], enemyTeam[0]);
+    const firstPlayer = playerTeam[0];
+    const firstEnemy = enemyTeam[0];
+    if (!firstPlayer || !firstEnemy) return;
+
+    const firstTurn = determineTurnOrder(firstPlayer, firstEnemy);
 
     battleRecordedRef.current = false;
     progressRecordedRef.current = false;
@@ -385,7 +419,11 @@ export default function BattlePage() {
 
       if (playerTeam.length === 0 || enemyTeam.length === 0) return;
 
-      const firstTurn = determineTurnOrder(playerTeam[0], enemyTeam[0]);
+      const firstPlayer = playerTeam[0];
+      const firstEnemy = enemyTeam[0];
+      if (!firstPlayer || !firstEnemy) return;
+
+      const firstTurn = determineTurnOrder(firstPlayer, firstEnemy);
 
       battleRecordedRef.current = false;
       progressRecordedRef.current = false;
@@ -476,7 +514,7 @@ export default function BattlePage() {
           const updatedTeam = [...prev.playerTeam];
           const active = { ...updatedTeam[prev.playerActiveIndex] };
           if (active.status) {
-            active.status = updateStatusState(active.status);
+            active.status = normalizeStatus(updateStatusState(active.status));
           }
           updatedTeam[prev.playerActiveIndex] = active;
           return { ...prev, playerTeam: updatedTeam };
@@ -611,7 +649,7 @@ export default function BattlePage() {
         } else {
           // Update enemy status state at end of turn
           if (updatedEnemy.status) {
-            updatedEnemy.status = updateStatusState(updatedEnemy.status);
+            updatedEnemy.status = normalizeStatus(updateStatusState(updatedEnemy.status));
           }
         }
 
@@ -723,7 +761,7 @@ export default function BattlePage() {
             } else {
               // Update player status state at end of turn
               if (updatedPlayer.status) {
-                updatedPlayer.status = updateStatusState(updatedPlayer.status);
+                updatedPlayer.status = normalizeStatus(updateStatusState(updatedPlayer.status));
               }
             }
 
@@ -732,7 +770,7 @@ export default function BattlePage() {
 
           // Update enemy status state
           if (enemyPokemon.status) {
-            enemyPokemon.status = updateStatusState(enemyPokemon.status);
+            enemyPokemon.status = normalizeStatus(updateStatusState(enemyPokemon.status));
           }
           newEnemyTeam[newEnemyActiveIndex] = enemyPokemon;
         }
@@ -1173,20 +1211,20 @@ export default function BattlePage() {
         {battleState.status === "setup" && (
           <BattleTeamBuilder
             format={format === "6v6" ? "6v6" : format}
-            pokemon={pokemon.map((p: any) => ({
-              id: p.id,
-              name_en: p.name_en,
-              name_ar: p.name_ar || p.name_en,
-              types: Array.isArray(p.types) ? p.types : ["normal"],
-              stats: p.stats,
+            pokemon={safePokemon.map((p: any) => ({
+              id: safeNumber(p?.id, 0),
+              name_en: safeString(p?.name_en, "Unknown"),
+              name_ar: safeString(p?.name_ar, safeString(p?.name_en, "غير معروف")),
+              types: Array.isArray(p?.types) && p.types.length > 0 ? p.types.filter(Boolean) : ["normal"],
+              stats: p?.stats ?? DEFAULT_STATS,
             }))}
-            moves={moves.map((m: any) => ({
-              id: m.id,
-              name_en: m.name_en,
-              name_ar: m.name_ar || m.name_en,
-              type: m.type || "normal",
-              power: m.power,
-              category: m.category || "physical",
+            moves={safeMoves.map((m: any) => ({
+              id: safeNumber(m?.id, -1),
+              name_en: safeString(m?.name_en, "Tackle"),
+              name_ar: safeString(m?.name_ar, safeString(m?.name_en, "ضربة")),
+              type: safeString(m?.type, "normal"),
+              power: m?.power == null ? null : safeNumber(m.power, 40),
+              category: safeString(m?.category, "physical"),
             }))}
             onTeamReady={startCustomBattle}
             onCancel={resetBattle}
