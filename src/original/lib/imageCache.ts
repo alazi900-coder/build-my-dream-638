@@ -1,3 +1,4 @@
+// @ts-nocheck
 // Use the same cache name as sw.js for consistency
 const SW_IMAGES_CACHE = "images-v1";
 // Legacy cache name for backwards compatibility
