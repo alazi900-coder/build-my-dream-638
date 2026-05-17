@@ -299,19 +299,37 @@ export default function BattlePage() {
 
   // Create a battle Pokemon from data
   const createBattlePokemon = useCallback((poke: any, selectedMoves: any[]): BattlePokemon => {
-    const pokemonStats = poke.stats || { hp: 100, atk: 50, def: 50, spa: 50, spd: 50, spe: 50 };
+    const rawStats = poke?.stats ?? DEFAULT_STATS;
+    const pokemonStats = {
+      hp: safeNumber(rawStats.hp, DEFAULT_STATS.hp),
+      atk: safeNumber(rawStats.atk, DEFAULT_STATS.atk),
+      def: safeNumber(rawStats.def, DEFAULT_STATS.def),
+      spa: safeNumber(rawStats.spa, DEFAULT_STATS.spa),
+      spd: safeNumber(rawStats.spd, DEFAULT_STATS.spd),
+      spe: safeNumber(rawStats.spe, DEFAULT_STATS.spe),
+    };
     const maxHp = Math.max(50, pokemonStats.hp * 2 + 50);
 
-    const battleMoves = selectedMoves.slice(0, 4).map((m) => ({
-      id: m.id,
-      name_en: m.name_en,
-      name_ar: m.name_ar || m.name_en,
-      type: m.type || "normal",
-      power: m.power,
-      accuracy: m.accuracy,
-      pp: m.pp || 10,
-      category: m.category || "physical",
-    }));
+    const battleMoves = selectedMoves
+      .filter(Boolean)
+      .slice(0, 4)
+      .map((m): BattleMove => {
+        const nameEn = safeString(m.name_en, "Tackle");
+        return {
+          id: safeNumber(m.id, -1),
+          name_en: nameEn,
+          name_ar: safeString(m.name_ar, nameEn),
+          type: safeString(m.type, "normal"),
+          power: m.power == null ? null : safeNumber(m.power, null as unknown as number),
+          accuracy: m.accuracy == null ? null : safeNumber(m.accuracy, 100),
+          pp: Math.max(1, safeNumber(m.pp, 10)),
+          category: safeString(m.category, "physical"),
+        };
+      });
+
+    if (battleMoves.length === 0) {
+      battleMoves.push(STRUGGLE_MOVE as BattleMove);
+    }
 
     // Initialize PP for moves
     const ppMap: Record<string, number> = {};
@@ -321,10 +339,10 @@ export default function BattlePage() {
     setMovePP((prev) => ({ ...prev, ...ppMap }));
 
     return {
-      id: poke.id,
-      name_en: poke.name_en,
-      name_ar: poke.name_ar || poke.name_en,
-      types: Array.isArray(poke.types) ? poke.types : ["normal"],
+      id: safeNumber(poke?.id, 0),
+      name_en: safeString(poke?.name_en, "Unknown"),
+      name_ar: safeString(poke?.name_ar, safeString(poke?.name_en, "غير معروف")),
+      types: Array.isArray(poke?.types) && poke.types.length > 0 ? poke.types.filter(Boolean) : ["normal"],
       stats: pokemonStats,
       currentHp: maxHp,
       maxHp,
