@@ -276,7 +276,7 @@ export function getMoveTypeIconUrl(typeName: string | null | undefined): string 
  * Get trainer sprite URL from Showdown (most reliable CORS-friendly source)
  * Maps trainer names to their sprite files
  */
-export function getTrainerSpriteUrl(trainerName: string): string {
+export function getTrainerSpriteUrl(trainerName: string | null | undefined): string {
   // Map common trainer names to their Showdown sprite filenames
   const nameMap: Record<string, string> = {
     // === Kanto Gym Leaders ===
@@ -514,7 +514,7 @@ export function getTrainerSpriteUrl(trainerName: string): string {
     argenta: "argenta",
   };
 
-  const normalizedName = trainerName.toLowerCase().trim();
+  const normalizedName = safeString(trainerName, "trainer").toLowerCase().trim();
   const spriteName = nameMap[normalizedName];
 
   if (spriteName) {
@@ -529,8 +529,8 @@ export function getTrainerSpriteUrl(trainerName: string): string {
 /**
  * Get multiple fallback URLs for a trainer (for fallback chain)
  */
-export function getTrainerFallbackUrls(trainerName: string): string[] {
-  const normalizedName = trainerName.toLowerCase().trim();
+export function getTrainerFallbackUrls(trainerName: string | null | undefined): string[] {
+  const normalizedName = safeString(trainerName, "trainer").toLowerCase().trim();
   const noSpaces = normalizedName.replace(/\s+/g, "");
   const withHyphens = normalizedName.replace(/\s+/g, "-");
 
@@ -569,9 +569,9 @@ export function getItemPlaceholderUrl(): string {
  * Collect all image URLs that need to be cached for offline use
  */
 export function collectAllImageUrls(data: {
-  pokemon: { id: number }[];
-  items: { name_en: string }[];
-  npcs: { image_url: string | null }[];
+  pokemon: { id: number | null | undefined }[];
+  items: { name_en: string | null | undefined }[];
+  npcs: { image_url: string | null | undefined }[];
   locations: { map_image_url?: string | null }[];
 }): string[] {
   const urls: string[] = [];
@@ -640,9 +640,9 @@ export function collectAllImageUrls(data: {
 export function collectSectionImageUrls(
   section: "pokemon" | "items" | "gyms" | "maps",
   data: {
-    pokemon?: { id: number }[];
-    items?: { name_en: string }[];
-    npcs?: { image_url: string | null }[];
+    pokemon?: { id: number | null | undefined }[];
+    items?: { name_en: string | null | undefined }[];
+    npcs?: { image_url: string | null | undefined }[];
     locations?: { map_image_url?: string | null }[];
   },
 ): string[] {
