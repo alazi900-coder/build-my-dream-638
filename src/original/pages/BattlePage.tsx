@@ -333,13 +333,14 @@ export default function BattlePage() {
 
     // Initialize PP for moves
     const ppMap: Record<string, number> = {};
+    const pokemonId = safeNumber(poke?.id, 0);
     battleMoves.forEach((m) => {
-      ppMap[`${poke.id}-${m.id}`] = m.pp;
+      ppMap[`${pokemonId}-${m.id}`] = m.pp;
     });
     setMovePP((prev) => ({ ...prev, ...ppMap }));
 
     return {
-      id: safeNumber(poke?.id, 0),
+      id: pokemonId,
       name_en: safeString(poke?.name_en, "Unknown"),
       name_ar: safeString(poke?.name_ar, safeString(poke?.name_en, "غير معروف")),
       types: Array.isArray(poke?.types) && poke.types.length > 0 ? poke.types.filter(Boolean) : ["normal"],
@@ -354,17 +355,17 @@ export default function BattlePage() {
   // Generate random team for quick battle
   const generateRandomTeam = useCallback(
     (count: number): BattlePokemon[] => {
-      if (pokemon.length === 0 || moves.length === 0) return [];
+      if (safePokemon.length === 0 || safeMoves.length === 0) return [];
 
-      const shuffled = [...pokemon].sort(() => Math.random() - 0.5);
+      const shuffled = [...safePokemon].sort(() => Math.random() - 0.5);
       const selected = shuffled.slice(0, count);
 
       return selected.map((poke) => {
-        const pokeMoves = [...moves].sort(() => Math.random() - 0.5).slice(0, 4);
+        const pokeMoves = [...safeMoves].sort(() => Math.random() - 0.5).slice(0, 4);
         return createBattlePokemon(poke, pokeMoves);
       });
     },
-    [pokemon, moves, createBattlePokemon],
+    [safePokemon, safeMoves, createBattlePokemon],
   );
 
   // Start quick battle
