@@ -79,7 +79,7 @@ export async function getCachedImage(url: string | null | undefined): Promise<st
  * Cache multiple images with progress callback
  */
 export async function cacheImages(
-  urls: string[],
+  urls: Array<string | null | undefined>,
   onProgress?: (done: number, total: number, currentUrl?: string) => void,
 ): Promise<{ success: number; failed: number }> {
   const cache = await getCache();
@@ -87,7 +87,7 @@ export async function cacheImages(
   let failed = 0;
 
   // Filter out empty/invalid URLs and already cached ones
-  const validUrls = urls.filter((url) => url && url.trim() !== "");
+  const validUrls = urls.map((url) => safeString(url)).filter(Boolean);
   const uncachedUrls: string[] = [];
 
   for (const url of validUrls) {
@@ -135,9 +135,11 @@ export async function cacheImages(
 /**
  * Check if an image is cached
  */
-export async function isCached(url: string): Promise<boolean> {
+export async function isCached(url: string | null | undefined): Promise<boolean> {
   try {
-    const response = await findInCaches(url);
+    const safeUrl = safeString(url);
+    if (!safeUrl) return false;
+    const response = await findInCaches(safeUrl);
     return !!response;
   } catch {
     return false;
@@ -194,23 +196,23 @@ export async function clearImageCache(): Promise<void> {
 /**
  * Generate Pokemon sprite URL (small icon)
  */
-export function getPokemonSpriteUrl(pokemonId: number): string {
-  return `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${pokemonId}.png`;
+export function getPokemonSpriteUrl(pokemonId: number | null | undefined): string {
+  return `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${safePositiveId(pokemonId)}.png`;
 }
 
 /**
  * Generate Pokemon artwork URL (higher quality)
  */
-export function getPokemonArtworkUrl(pokemonId: number): string {
-  return `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/${pokemonId}.png`;
+export function getPokemonArtworkUrl(pokemonId: number | null | undefined): string {
+  return `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/${safePositiveId(pokemonId)}.png`;
 }
 
 /**
  * Generate animated Pokemon sprite URL from PokeAPI (Gen 5 Black/White style)
  * Available for Pokemon 1-649 (Gen 1-5)
  */
-export function getPokemonAnimatedSpriteUrl(pokemonId: number): string {
-  return `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/versions/generation-v/black-white/animated/${pokemonId}.gif`;
+export function getPokemonAnimatedSpriteUrl(pokemonId: number | null | undefined): string {
+  return `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/versions/generation-v/black-white/animated/${safePositiveId(pokemonId)}.gif`;
 }
 
 /**
