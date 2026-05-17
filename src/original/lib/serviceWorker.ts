@@ -1,4 +1,3 @@
-// @ts-nocheck
 /**
  * Service Worker Registration and Communication Utility
  * Handles SW registration, updates, and image precaching via postMessage
@@ -10,11 +9,17 @@ type UpdateCallback = () => void;
 let swRegistration: ServiceWorkerRegistration | null = null;
 let onUpdateAvailable: UpdateCallback | null = null;
 
+const toSafeNumber = (value: unknown, fallback = 0): number =>
+  typeof value === "number" && Number.isFinite(value) ? value : fallback;
+
+const toSafeString = (value: unknown, fallback = ""): string =>
+  typeof value === "string" ? value : fallback;
+
 /**
  * Register the Service Worker
  */
 export async function registerServiceWorker(): Promise<ServiceWorkerRegistration | null> {
-  if (!("serviceWorker" in navigator)) {
+  if (typeof navigator === "undefined" || !("serviceWorker" in navigator)) {
     console.log("[SW Client] Service Workers not supported");
     return null;
   }
