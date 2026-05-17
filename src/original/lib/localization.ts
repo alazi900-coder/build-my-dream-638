@@ -230,9 +230,10 @@ export const LEARN_METHOD_LABELS: Record<string, { en: string; ar: string }> = {
 /**
  * Get localized learn method name
  */
-export function getLocalizedLearnMethod(method: string, language: "en" | "ar"): string {
-  const label = LEARN_METHOD_LABELS[method.toLowerCase()];
-  if (!label) return method;
+export function getLocalizedLearnMethod(method: string | null | undefined, language: SupportedLanguage): string {
+  const safeMethod = safeText(method, "other");
+  const label = LEARN_METHOD_LABELS[safeKey(method, "other")];
+  if (!label) return safeMethod;
   return language === "ar" ? label.ar : label.en;
 }
 
@@ -256,12 +257,13 @@ export const STAT_LABELS: Record<
  * Get localized stat name
  */
 export function getLocalizedStat(
-  stat: string,
-  language: "en" | "ar",
+  stat: string | null | undefined,
+  language: SupportedLanguage,
   short: boolean = true,
 ): string {
-  const label = STAT_LABELS[stat.toLowerCase()];
-  if (!label) return stat;
+  const safeStat = safeText(stat, AR_PLACEHOLDERS.unknown);
+  const label = STAT_LABELS[safeKey(stat)];
+  if (!label) return safeStat;
   if (language === "ar") {
     return short ? label.arShort : label.ar;
   }
@@ -308,9 +310,10 @@ export const LOCATION_CATEGORY_LABELS: Record<string, { en: string; ar: string }
 /**
  * Get localized location category name
  */
-export function getLocalizedLocationCategory(category: string, language: "en" | "ar"): string {
-  const label = LOCATION_CATEGORY_LABELS[category.toLowerCase()];
-  if (!label) return category;
+export function getLocalizedLocationCategory(category: string | null | undefined, language: SupportedLanguage): string {
+  const safeCategory = safeText(category, "other");
+  const label = LOCATION_CATEGORY_LABELS[safeKey(category, "other")];
+  if (!label) return safeCategory;
   return language === "ar" ? label.ar : label.en;
 }
 
@@ -345,11 +348,12 @@ export const ENCOUNTER_METHOD_LABELS: Record<string, { en: string; ar: string }>
 /**
  * Get localized encounter method name
  */
-export function getLocalizedEncounterMethod(method: string, language: "en" | "ar"): string {
-  const label = ENCOUNTER_METHOD_LABELS[method.toLowerCase()];
+export function getLocalizedEncounterMethod(method: string | null | undefined, language: SupportedLanguage): string {
+  const safeMethod = safeText(method, "unknown");
+  const label = ENCOUNTER_METHOD_LABELS[safeKey(method)];
   if (!label) {
     // Return the method with first letter capitalized if not found
-    return method.charAt(0).toUpperCase() + method.slice(1).replace(/-/g, " ");
+    return safeMethod.charAt(0).toUpperCase() + safeMethod.slice(1).replace(/-/g, " ");
   }
   return language === "ar" ? label.ar : label.en;
 }
