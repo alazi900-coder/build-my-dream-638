@@ -41,7 +41,7 @@ export const LTR_NUMBER_DIR = "ltr" as const;
  * Format number for display - always LTR in RTL context
  */
 export function formatNumber(num: number | string | null | undefined, language: SupportedLanguage): string {
-  return String(num);
+  return String(num ?? 0);
 }
 
 // ============================================================
