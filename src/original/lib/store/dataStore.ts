@@ -627,7 +627,7 @@ export async function getAllGyms(): Promise<Gym[]> {
       g.id,
       {
         ...g,
-        available_in: Array.isArray(g.available_in) ? g.available_in : [],
+        available_in: deriveGenericAvailability(g.id, g.available_in),
       },
     ]),
   );
