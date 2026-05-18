@@ -563,7 +563,7 @@ export async function getAllLocations(): Promise<Location[]> {
       l.id,
       {
         ...l,
-        available_in: Array.isArray(l.available_in) ? l.available_in : [],
+        available_in: deriveGenericAvailability(l.id, l.available_in),
       },
     ]),
   );
