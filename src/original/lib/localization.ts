@@ -40,7 +40,10 @@ export const LTR_NUMBER_DIR = "ltr" as const;
 /**
  * Format number for display - always LTR in RTL context
  */
-export function formatNumber(num: number | string | null | undefined, language: SupportedLanguage): string {
+export function formatNumber(
+  num: number | string | null | undefined,
+  language: SupportedLanguage,
+): string {
   return String(num ?? 0);
 }
 
@@ -186,7 +189,10 @@ export const TYPE_LABELS: Record<string, { en: string; ar: string }> = {
 /**
  * Get localized type name
  */
-export function getLocalizedType(type: string | null | undefined, language: SupportedLanguage): string {
+export function getLocalizedType(
+  type: string | null | undefined,
+  language: SupportedLanguage,
+): string {
   const safeType = safeText(type, AR_PLACEHOLDERS.unknown);
   const label = TYPE_LABELS[safeKey(type)];
   if (!label) return safeType;
@@ -207,7 +213,10 @@ export const CATEGORY_LABELS: Record<string, { en: string; ar: string }> = {
 /**
  * Get localized category name
  */
-export function getLocalizedCategory(category: string | null | undefined, language: SupportedLanguage): string {
+export function getLocalizedCategory(
+  category: string | null | undefined,
+  language: SupportedLanguage,
+): string {
   const safeCategory = safeText(category, "other");
   const label = CATEGORY_LABELS[safeKey(category, "other")];
   if (!label) return safeCategory;
@@ -230,7 +239,10 @@ export const LEARN_METHOD_LABELS: Record<string, { en: string; ar: string }> = {
 /**
  * Get localized learn method name
  */
-export function getLocalizedLearnMethod(method: string | null | undefined, language: SupportedLanguage): string {
+export function getLocalizedLearnMethod(
+  method: string | null | undefined,
+  language: SupportedLanguage,
+): string {
   const safeMethod = safeText(method, "other");
   const label = LEARN_METHOD_LABELS[safeKey(method, "other")];
   if (!label) return safeMethod;
@@ -310,7 +322,10 @@ export const LOCATION_CATEGORY_LABELS: Record<string, { en: string; ar: string }
 /**
  * Get localized location category name
  */
-export function getLocalizedLocationCategory(category: string | null | undefined, language: SupportedLanguage): string {
+export function getLocalizedLocationCategory(
+  category: string | null | undefined,
+  language: SupportedLanguage,
+): string {
   const safeCategory = safeText(category, "other");
   const label = LOCATION_CATEGORY_LABELS[safeKey(category, "other")];
   if (!label) return safeCategory;
@@ -348,7 +363,10 @@ export const ENCOUNTER_METHOD_LABELS: Record<string, { en: string; ar: string }>
 /**
  * Get localized encounter method name
  */
-export function getLocalizedEncounterMethod(method: string | null | undefined, language: SupportedLanguage): string {
+export function getLocalizedEncounterMethod(
+  method: string | null | undefined,
+  language: SupportedLanguage,
+): string {
   const safeMethod = safeText(method, "unknown");
   const label = ENCOUNTER_METHOD_LABELS[safeKey(method)];
   if (!label) {

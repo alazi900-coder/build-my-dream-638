@@ -182,9 +182,7 @@ export function EvolutionChain({
               {stage.map((p) => {
                 const name = lang === "ar" ? (p.name_ar ?? p.name_en) : p.name_en;
                 const edge = evolutions.find((e) => e.to_pokemon_id === p.id);
-                const label = edge
-                  ? triggerLabel(edge.trigger, edge.min_level, edge.item)
-                  : null;
+                const label = edge ? triggerLabel(edge.trigger, edge.min_level, edge.item) : null;
                 const itemKey = edge?.item ?? null;
                 const itemLabel = itemKey
                   ? (ITEM_LABELS[itemKey]?.[lang] ?? itemKey.replace(/-/g, " "))
@@ -250,18 +248,11 @@ export function EvolutionChain({
           .map((p) => {
             const name = lang === "ar" ? (p.name_ar ?? p.name_en) : p.name_en;
             const tip = evolutionTip(p, lang);
-            const moves = p.types
-              .flatMap((tt) => TYPE_MOVE_TIPS[tt] ?? [])
-              .slice(0, 4);
+            const moves = p.types.flatMap((tt) => TYPE_MOVE_TIPS[tt] ?? []).slice(0, 4);
             return (
-              <div
-                key={p.id}
-                className="rounded-xl border border-border bg-muted/30 p-4"
-              >
+              <div key={p.id} className="rounded-xl border border-border bg-muted/30 p-4">
                 <div className="mb-2 flex items-center gap-2">
-                  {p.sprite_url && (
-                    <img src={p.sprite_url} alt={name} className="h-10 w-10" />
-                  )}
+                  {p.sprite_url && <img src={p.sprite_url} alt={name} className="h-10 w-10" />}
                   <h3 className="font-bold">{name}</h3>
                 </div>
                 <div className="flex items-start gap-2 text-sm">
