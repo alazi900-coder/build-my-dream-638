@@ -311,6 +311,27 @@ function getFallbackData<T>(storeName: StoreName): T[] {
   return [...(fallbackDataByStore[storeName] ?? [])] as T[];
 }
 
+const ALL_GAMES = ["letsgo", "swsh", "arceus", "sv"] as const;
+
+function derivePokemonAvailability(p: Pokemon & { generation?: number }): string[] {
+  if (Array.isArray(p.available_in) && p.available_in.length > 0) return p.available_in;
+  const id = p.id ?? 0;
+  const gen = (p as any).generation as number | undefined;
+  // Distribute by generation so each game has a distinct dex
+  if (gen === 1 || id <= 151) return ["letsgo"];
+  if (gen === 2 || (id >= 152 && id <= 251)) return ["swsh"];
+  if (gen === 3 || (id >= 252 && id <= 386)) {
+    // Alternate gen 3 between arceus and sv
+    return id % 2 === 0 ? ["arceus"] : ["sv"];
+  }
+  return [ALL_GAMES[id % 4]];
+}
+
+function deriveGenericAvailability(id: number, existing?: string[]): string[] {
+  if (Array.isArray(existing) && existing.length > 0) return existing;
+  return [ALL_GAMES[Math.abs(id) % 4]];
+}
+
 function normalizePokemonStats(
   stats: Record<string, unknown> | null | undefined,
 ): Pokemon["stats"] {
