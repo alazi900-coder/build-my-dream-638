@@ -522,7 +522,7 @@ export async function getAllItems(): Promise<Item[]> {
       {
         ...i,
         obtain: Array.isArray(i.obtain) ? i.obtain : [],
-        available_in: Array.isArray(i.available_in) ? i.available_in : [],
+        available_in: deriveGenericAvailability(i.id, i.available_in),
       },
     ]),
   );
