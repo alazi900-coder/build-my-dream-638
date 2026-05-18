@@ -343,7 +343,10 @@ export default function BattlePage() {
       id: pokemonId,
       name_en: safeString(poke?.name_en, "Unknown"),
       name_ar: safeString(poke?.name_ar, safeString(poke?.name_en, "غير معروف")),
-      types: Array.isArray(poke?.types) && poke.types.length > 0 ? poke.types.filter(Boolean) : ["normal"],
+      types:
+        Array.isArray(poke?.types) && poke.types.length > 0
+          ? poke.types.filter(Boolean)
+          : ["normal"],
       stats: pokemonStats,
       currentHp: maxHp,
       maxHp,
@@ -1215,7 +1218,10 @@ export default function BattlePage() {
               id: safeNumber(p?.id, 0),
               name_en: safeString(p?.name_en, "Unknown"),
               name_ar: safeString(p?.name_ar, safeString(p?.name_en, "غير معروف")),
-              types: Array.isArray(p?.types) && p.types.length > 0 ? p.types.filter(Boolean) : ["normal"],
+              types:
+                Array.isArray(p?.types) && p.types.length > 0
+                  ? p.types.filter(Boolean)
+                  : ["normal"],
               stats: p?.stats ?? DEFAULT_STATS,
             }))}
             moves={safeMoves.map((m: any) => ({

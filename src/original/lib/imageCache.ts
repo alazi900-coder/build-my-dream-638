@@ -220,7 +220,9 @@ export function getPokemonAnimatedSpriteUrl(pokemonId: number | null | undefined
  * Works for all Pokemon including newer generations
  */
 export function getPokemonShowdownSpriteUrl(pokemonName: string | null | undefined): string {
-  const name = safeString(pokemonName, "missingno").toLowerCase().replace(/[^a-z0-9]/g, "");
+  const name = safeString(pokemonName, "missingno")
+    .toLowerCase()
+    .replace(/[^a-z0-9]/g, "");
   return `https://play.pokemonshowdown.com/sprites/ani/${name}.gif`;
 }
 
@@ -228,7 +230,9 @@ export function getPokemonShowdownSpriteUrl(pokemonName: string | null | undefin
  * Generate shiny animated Pokemon sprite URL from Showdown
  */
 export function getPokemonShowdownShinySpriteUrl(pokemonName: string | null | undefined): string {
-  const name = safeString(pokemonName, "missingno").toLowerCase().replace(/[^a-z0-9]/g, "");
+  const name = safeString(pokemonName, "missingno")
+    .toLowerCase()
+    .replace(/[^a-z0-9]/g, "");
   return `https://play.pokemonshowdown.com/sprites/ani-shiny/${name}.gif`;
 }
 
