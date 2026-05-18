@@ -1,6 +1,7 @@
 /**
  * Evolution Chain Stage Layout
  * Uses BFS to build staged evolution chains supporting branching
+ * Falls back to inline Pokemon evolution data when evolution_nodes is empty
  */
 
 import {
@@ -20,9 +21,89 @@ import {
 } from "./normalize";
 import { getLocalizedName } from "@/original/lib/localization";
 
+// Inline evolution step from Pokemon.evolution.chain
+interface InlineEvolutionStep {
+  pokemon_id: number;
+  name_en: string;
+  name_ar: string;
+  method_en: string;
+  method_ar: string;
+}
+
+// Pokemon with inline evolution data
+interface PokemonWithEvolution extends PokemonBasic {
+  evolution?: {
+    stage: number;
+    chain: InlineEvolutionStep[];
+  } | null;
+}
+
+/**
+ * Parse method_en string to extract method_type and level
+ * e.g. "Level 16" → { method_type: "level", level: 16 }
+ *      "Base" → null (skip)
+ *      "Trade" → { method_type: "trade", level: null }
+ */
+function parseEvolutionMethod(
+  methodEn: string,
+): { method_type: string; level: number | null } | null {
+  if (methodEn === "Base" || methodEn === "أساسي") return null;
+
+  const levelMatch = methodEn.match(/^Level\s+(\d+)$/i);
+  if (levelMatch) {
+    return { method_type: "level", level: parseInt(levelMatch[1], 10) };
+  }
+
+  const methodLower = methodEn.toLowerCase();
+  if (methodLower.includes("trade")) return { method_type: "trade", level: null };
+  if (methodLower.includes("friendship") || methodLower.includes("صداقة"))
+    return { method_type: "friendship", level: null };
+  if (methodLower.includes("stone") || methodLower.includes("item"))
+    return { method_type: "item", level: null };
+
+  return { method_type: "other", level: null };
+}
+
+/**
+ * Synthesize EvolutionNodeDB entries from inline Pokemon evolution.chain data.
+ * This is the fallback when evolution_nodes table is empty.
+ */
+export function synthesizeEvolutionNodes(allPokemon: PokemonWithEvolution[]): EvolutionNodeDB[] {
+  const nodes: EvolutionNodeDB[] = [];
+  let nextId = 1;
+
+  for (const pokemon of allPokemon) {
+    const chain = pokemon.evolution?.chain;
+    if (!chain || chain.length < 2) continue;
+
+    // Build edges between consecutive chain members
+    for (let i = 0; i < chain.length - 1; i++) {
+      const from = chain[i];
+      const to = chain[i + 1];
+      const parsed = parseEvolutionMethod(to.method_en);
+      if (!parsed) continue;
+
+      nodes.push({
+        id: nextId++,
+        pokemon_id: from.pokemon_id,
+        evolves_to_pokemon_id: to.pokemon_id,
+        method_type: parsed.method_type,
+        level: parsed.level,
+        item_id: null,
+        conditions_en: to.method_en !== "Base" ? to.method_en : null,
+        conditions_ar: to.method_ar !== "أساسي" ? to.method_ar : null,
+        game_id: null,
+      });
+    }
+  }
+
+  return nodes;
+}
+
 /**
  * Build complete evolution chain for a Pokemon using BFS
  * Supports branching evolutions (like Eevee) with proper stage grouping
+ * Falls back to inline Pokemon evolution data when evolution_nodes is empty
  */
 export function buildEvolutionChain(
   pokemonId: number,
@@ -37,8 +118,14 @@ export function buildEvolutionChain(
     return null;
   }
 
+  // Fallback: synthesize evolution nodes from inline data when table is empty
+  let effectiveNodes = evolutionNodes;
+  if (effectiveNodes.length === 0) {
+    effectiveNodes = synthesizeEvolutionNodes(allPokemon as PokemonWithEvolution[]);
+  }
+
   // Create O(1) lookup maps
-  const maps = createEvolutionMaps(evolutionNodes, allPokemon, items);
+  const maps = createEvolutionMaps(effectiveNodes, allPokemon, items);
 
   // Helper to get item name
   const getItemName = (id: number | null): string | null => {
@@ -49,7 +136,7 @@ export function buildEvolutionChain(
   };
 
   // Check if this Pokemon has any evolution data
-  const hasEvolution = evolutionNodes.some(
+  const hasEvolution = effectiveNodes.some(
     (n) => n.pokemon_id === pokemonId || n.evolves_to_pokemon_id === pokemonId,
   );
 

@@ -162,6 +162,24 @@ CREATE POLICY "Public read learnsets" ON public.learnsets FOR SELECT USING (true
 CREATE POLICY "Public read games" ON public.games FOR SELECT USING (true);
 CREATE POLICY "Public read pokemon_held_items" ON public.pokemon_held_items FOR SELECT USING (true);
 
+-- Evolution nodes table
+CREATE TABLE IF NOT EXISTS public.evolution_nodes (
+  id BIGSERIAL PRIMARY KEY,
+  pokemon_id INTEGER NOT NULL REFERENCES public.pokemon(id) ON DELETE CASCADE,
+  evolves_to_pokemon_id INTEGER NOT NULL REFERENCES public.pokemon(id) ON DELETE CASCADE,
+  method_type TEXT NOT NULL DEFAULT 'level',
+  level INTEGER,
+  item_id INTEGER REFERENCES public.items(id) ON DELETE SET NULL,
+  conditions_en TEXT,
+  conditions_ar TEXT,
+  game_id TEXT
+);
+CREATE INDEX IF NOT EXISTS evolution_nodes_pokemon_idx ON public.evolution_nodes(pokemon_id);
+CREATE INDEX IF NOT EXISTS evolution_nodes_target_idx ON public.evolution_nodes(evolves_to_pokemon_id);
+
+ALTER TABLE public.evolution_nodes ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "Public read evolution_nodes" ON public.evolution_nodes FOR SELECT USING (true);
+
 -- Insert seed data for games
 INSERT INTO public.games (id, name_en, name_ar) VALUES
   ('sword-shield', 'Pokémon Sword & Shield', 'بوكيمون سورد وشيلد'),

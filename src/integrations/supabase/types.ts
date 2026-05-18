@@ -64,46 +64,49 @@ export type Database = {
       };
       evolution_nodes: {
         Row: {
-          chain_id: number;
-          condition: Json | null;
-          from_pokemon_id: number;
           id: number;
-          item: string | null;
-          min_level: number | null;
-          to_pokemon_id: number;
-          trigger: string | null;
+          pokemon_id: number;
+          evolves_to_pokemon_id: number;
+          method_type: string;
+          level: number | null;
+          item_id: number | null;
+          conditions_en: string | null;
+          conditions_ar: string | null;
+          game_id: string | null;
         };
         Insert: {
-          chain_id: number;
-          condition?: Json | null;
-          from_pokemon_id: number;
           id?: number;
-          item?: string | null;
-          min_level?: number | null;
-          to_pokemon_id: number;
-          trigger?: string | null;
+          pokemon_id: number;
+          evolves_to_pokemon_id: number;
+          method_type?: string;
+          level?: number | null;
+          item_id?: number | null;
+          conditions_en?: string | null;
+          conditions_ar?: string | null;
+          game_id?: string | null;
         };
         Update: {
-          chain_id?: number;
-          condition?: Json | null;
-          from_pokemon_id?: number;
           id?: number;
-          item?: string | null;
-          min_level?: number | null;
-          to_pokemon_id?: number;
-          trigger?: string | null;
+          pokemon_id?: number;
+          evolves_to_pokemon_id?: number;
+          method_type?: string;
+          level?: number | null;
+          item_id?: number | null;
+          conditions_en?: string | null;
+          conditions_ar?: string | null;
+          game_id?: string | null;
         };
         Relationships: [
           {
-            foreignKeyName: "evolution_nodes_from_pokemon_id_fkey";
-            columns: ["from_pokemon_id"];
+            foreignKeyName: "evolution_nodes_pokemon_id_fkey";
+            columns: ["pokemon_id"];
             isOneToOne: false;
             referencedRelation: "pokemon";
             referencedColumns: ["id"];
           },
           {
-            foreignKeyName: "evolution_nodes_to_pokemon_id_fkey";
-            columns: ["to_pokemon_id"];
+            foreignKeyName: "evolution_nodes_evolves_to_pokemon_id_fkey";
+            columns: ["evolves_to_pokemon_id"];
             isOneToOne: false;
             referencedRelation: "pokemon";
             referencedColumns: ["id"];

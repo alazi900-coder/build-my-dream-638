@@ -2,9 +2,10 @@
  * Evolution Chain Component
  * Displays Pokemon evolution chain with support for branching evolutions, RTL, and game filtering.
  * Uses the evolution module utilities for O(1) lookups.
+ * Falls back to inline Pokemon evolution data when evolution_nodes table is empty.
  */
 
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useLanguage } from "@/original/contexts/LanguageContext";
 import { useGameFilter } from "@/original/contexts/GameFilterContext";
@@ -18,11 +19,25 @@ import {
   HelpCircle,
   Ban,
   TrendingUp as StatUp,
+  AlertTriangle,
+  BookOpen,
+  ChevronDown,
+  ChevronUp,
 } from "lucide-react";
 
-// Extended PokemonBasic with stats for evolution comparison
+// Extended PokemonBasic with stats and evolution for comparison
 interface PokemonBasicWithStats extends PokemonBasic {
   stats?: { hp: number; atk: number; def: number; spa: number; spd: number; spe: number } | null;
+  evolution?: {
+    stage: number;
+    chain: {
+      pokemon_id: number;
+      name_en: string;
+      name_ar: string;
+      method_en: string;
+      method_ar: string;
+    }[];
+  } | null;
 }
 import { cn } from "@/original/lib/utils";
 import { getPokemonArtwork } from "@/original/services/pokeApiService";
@@ -77,9 +92,9 @@ export function EvolutionChain({
     staleTime: 1000 * 60 * 30,
   });
 
-  // Fetch all pokemon for names and stats - try IndexedDB first
+  // Fetch all pokemon for names, stats, and inline evolution data - try IndexedDB first
   const { data: allPokemon = [], isLoading: pokemonLoading } = useQuery({
-    queryKey: ["all-pokemon-evolution-with-stats"],
+    queryKey: ["all-pokemon-evolution-with-stats-evo"],
     queryFn: async () => {
       try {
         const db = await getDB();
@@ -91,6 +106,7 @@ export function EvolutionChain({
             name_ar: p.name_ar,
             available_in: p.available_in,
             stats: p.stats,
+            evolution: p.evolution,
           })) as PokemonBasicWithStats[];
         }
       } catch (e) {
@@ -98,7 +114,7 @@ export function EvolutionChain({
       }
       const { data } = await supabase
         .from("pokemon")
-        .select("id, name_en, name_ar, available_in, stats");
+        .select("id, name_en, name_ar, available_in, stats, evolution");
       return (data || []) as PokemonBasicWithStats[];
     },
     staleTime: 1000 * 60 * 30,
@@ -781,6 +797,34 @@ export function EvolutionChain({
                           #{node.pokemon.id.toString().padStart(3, "0")}
                         </Badge>
 
+                        {/* Evolution Instructions link */}
+                        {node.evolvesFrom && (
+                          <span
+                            role="link"
+                            tabIndex={0}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              e.preventDefault();
+                              navigate(`/pokemon/${node.pokemon.id}`);
+                            }}
+                            onKeyDown={(e) => {
+                              if (e.key === "Enter") {
+                                e.stopPropagation();
+                                navigate(`/pokemon/${node.pokemon.id}`);
+                              }
+                            }}
+                            className="flex items-center gap-0.5 mt-1 text-[8px] text-primary hover:text-primary/80 cursor-pointer transition-colors"
+                            dir={isRtl ? "rtl" : "ltr"}
+                          >
+                            <BookOpen className="w-2.5 h-2.5" />
+                            <span className="underline whitespace-nowrap">
+                              {language === "ar"
+                                ? node.evolvesFrom.method_ar
+                                : node.evolvesFrom.method_en}
+                            </span>
+                          </span>
+                        )}
+
                         {!isAvailable && (
                           <span className="text-[7px] text-muted-foreground mt-0.5 text-center">
                             {AR_PLACEHOLDERS.notAvailable}
@@ -802,6 +846,18 @@ export function EvolutionChain({
               : `This Pokémon has ${totalPokemon - 1} different evolutions`}
           </p>
         )}
+
+        {/* Numbered Evolution Steps Section */}
+        {stages.length > 1 && (
+          <EvolutionStepsSection
+            stages={stages}
+            pokemonId={pokemonId}
+            language={language}
+            isRtl={isRtl}
+            getItemById={getItemById}
+            navigate={navigate}
+          />
+        )}
       </CardContent>
 
       {/* CSS for glow animation */}
@@ -816,6 +872,208 @@ export function EvolutionChain({
         }
       `}</style>
     </Card>
+  );
+}
+
+/**
+ * Numbered Evolution Steps Sub-component
+ * Shows clear step-by-step evolution instructions with conditions and item warnings.
+ */
+function EvolutionStepsSection({
+  stages,
+  pokemonId,
+  language,
+  isRtl,
+  getItemById,
+  navigate,
+}: {
+  stages: import("@/original/lib/evolution").ChainStage[];
+  pokemonId: number;
+  language: "en" | "ar";
+  isRtl: boolean;
+  getItemById: (
+    id: number | null | undefined,
+  ) => import("@/original/lib/evolution").ItemBasic | null;
+  navigate: (path: string) => void;
+}) {
+  const [expanded, setExpanded] = useState(false);
+
+  // Build flat list of evolution steps from stages
+  const steps = useMemo(() => {
+    const result: {
+      stepNum: number;
+      fromPokemon: PokemonBasic;
+      toPokemon: PokemonBasic;
+      method_en: string;
+      method_ar: string;
+      methodType: string;
+      level?: number | null;
+      itemId?: number | null;
+    }[] = [];
+
+    let stepNum = 1;
+    for (let i = 1; i < stages.length; i++) {
+      const prevStage = stages[i - 1];
+      const currentStage = stages[i];
+
+      for (const node of currentStage) {
+        if (!node.evolvesFrom) continue;
+
+        const fromPokemon =
+          prevStage.find((p) => p.pokemon.id === node.evolvesFrom!.fromId)?.pokemon ||
+          prevStage[0]?.pokemon;
+        if (!fromPokemon) continue;
+
+        result.push({
+          stepNum: stepNum++,
+          fromPokemon,
+          toPokemon: node.pokemon,
+          method_en: node.evolvesFrom.method_en,
+          method_ar: node.evolvesFrom.method_ar,
+          methodType: node.evolvesFrom.methodType,
+          level: node.evolvesFrom.level,
+          itemId: node.evolvesFrom.itemId,
+        });
+      }
+    }
+    return result;
+  }, [stages]);
+
+  if (steps.length === 0) return null;
+
+  return (
+    <div className="mt-6 border-t border-border pt-4" dir={isRtl ? "rtl" : "ltr"}>
+      <button
+        onClick={() => setExpanded(!expanded)}
+        className="flex items-center gap-2 w-full text-left group"
+      >
+        <BookOpen className="w-4 h-4 text-primary" />
+        <span className="font-semibold text-sm text-foreground flex-1">
+          {language === "ar" ? "تعليمات التطور" : "Evolution Instructions"}
+        </span>
+        <Badge variant="secondary" className="text-[10px]">
+          {steps.length} {language === "ar" ? "خطوات" : "steps"}
+        </Badge>
+        {expanded ? (
+          <ChevronUp className="w-4 h-4 text-muted-foreground" />
+        ) : (
+          <ChevronDown className="w-4 h-4 text-muted-foreground" />
+        )}
+      </button>
+
+      {expanded && (
+        <div className="mt-3 space-y-3">
+          {steps.map((step) => {
+            const item = step.itemId ? getItemById(step.itemId) : null;
+            const isItemMissing = step.methodType === "item" && step.itemId && !item;
+
+            return (
+              <div
+                key={`${step.fromPokemon.id}-${step.toPokemon.id}`}
+                className={cn(
+                  "flex items-start gap-3 p-3 rounded-lg border",
+                  step.toPokemon.id === pokemonId
+                    ? "bg-primary/10 border-primary/30"
+                    : "bg-muted/30 border-border",
+                )}
+              >
+                {/* Step number */}
+                <div className="flex items-center justify-center w-7 h-7 rounded-full bg-primary text-primary-foreground text-xs font-bold shrink-0 mt-0.5">
+                  {step.stepNum}
+                </div>
+
+                <div className="flex-1 min-w-0">
+                  {/* From → To names */}
+                  <div className="flex items-center gap-1.5 flex-wrap text-sm">
+                    <button
+                      onClick={() => navigate(`/pokemon/${step.fromPokemon.id}`)}
+                      className="font-semibold text-foreground hover:text-primary transition-colors"
+                    >
+                      {getLocalizedName(
+                        step.fromPokemon.name_en,
+                        step.fromPokemon.name_ar,
+                        language,
+                      )}
+                    </button>
+                    <ArrowRight className="w-3.5 h-3.5 text-muted-foreground shrink-0 rtl:rotate-180" />
+                    <button
+                      onClick={() => navigate(`/pokemon/${step.toPokemon.id}`)}
+                      className="font-semibold text-foreground hover:text-primary transition-colors"
+                    >
+                      {getLocalizedName(step.toPokemon.name_en, step.toPokemon.name_ar, language)}
+                    </button>
+                  </div>
+
+                  {/* Condition badge */}
+                  <div className="flex items-center gap-2 mt-1.5 flex-wrap">
+                    <Badge
+                      variant="outline"
+                      className={cn(
+                        "text-[10px] px-2 py-0.5",
+                        step.methodType === "level"
+                          ? "bg-blue-500/10 border-blue-500/30 text-blue-600 dark:text-blue-400"
+                          : step.methodType === "trade"
+                            ? "bg-purple-500/10 border-purple-500/30 text-purple-600 dark:text-purple-400"
+                            : step.methodType === "item"
+                              ? "bg-amber-500/10 border-amber-500/30 text-amber-600 dark:text-amber-400"
+                              : step.methodType === "friendship"
+                                ? "bg-pink-500/10 border-pink-500/30 text-pink-600 dark:text-pink-400"
+                                : "bg-muted/60 border-primary/30",
+                      )}
+                    >
+                      {language === "ar" ? step.method_ar : step.method_en}
+                    </Badge>
+
+                    {/* Item link */}
+                    {item && (
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          navigate(`/items/${step.itemId}`);
+                        }}
+                        className="flex items-center gap-1 text-[10px] text-accent hover:text-accent/80 transition-colors"
+                      >
+                        <OfflineImage
+                          src={getItemSpriteUrl(item.name_en)}
+                          alt={item.name_en}
+                          className="w-4 h-4 object-contain"
+                        />
+                        <span className="underline">
+                          {getLocalizedName(item.name_en, item.name_ar, language)}
+                        </span>
+                      </button>
+                    )}
+
+                    {/* Missing item warning */}
+                    {isItemMissing && (
+                      <div className="flex items-center gap-1 text-[10px] text-destructive">
+                        <AlertTriangle className="w-3.5 h-3.5" />
+                        <span>
+                          {language === "ar" ? "الأداة غير متوفرة!" : "Item not available!"}
+                        </span>
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                {/* Small Pokemon artwork for target */}
+                <button
+                  onClick={() => navigate(`/pokemon/${step.toPokemon.id}`)}
+                  className="w-10 h-10 shrink-0 rounded-lg overflow-hidden hover:scale-110 transition-transform"
+                >
+                  <img
+                    src={getPokemonArtwork(step.toPokemon.id)}
+                    alt={step.toPokemon.name_en}
+                    className="w-full h-full object-contain"
+                    loading="lazy"
+                  />
+                </button>
+              </div>
+            );
+          })}
+        </div>
+      )}
+    </div>
   );
 }
 
