@@ -413,7 +413,7 @@ export async function getAllPokemon(): Promise<Pokemon[]> {
         abilities: Array.isArray(p.abilities) ? p.abilities : [],
         stats: normalizePokemonStats(p.stats),
         tags: Array.isArray(p.tags) ? p.tags : [],
-        available_in: Array.isArray(p.available_in) ? p.available_in : [],
+        available_in: derivePokemonAvailability(p as any),
       },
     ]),
   );
