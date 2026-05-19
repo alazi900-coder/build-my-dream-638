@@ -14,6 +14,81 @@ export type Database = {
   }
   public: {
     Tables: {
+      comparison_presets: {
+        Row: {
+          created_at: string
+          game_id: string | null
+          id: string
+          name: string
+          pokemon_a_id: number | null
+          pokemon_a_level: number | null
+          pokemon_a_moves: Json | null
+          pokemon_b_id: number | null
+          pokemon_b_level: number | null
+          pokemon_b_moves: Json | null
+        }
+        Insert: {
+          created_at?: string
+          game_id?: string | null
+          id?: string
+          name: string
+          pokemon_a_id?: number | null
+          pokemon_a_level?: number | null
+          pokemon_a_moves?: Json | null
+          pokemon_b_id?: number | null
+          pokemon_b_level?: number | null
+          pokemon_b_moves?: Json | null
+        }
+        Update: {
+          created_at?: string
+          game_id?: string | null
+          id?: string
+          name?: string
+          pokemon_a_id?: number | null
+          pokemon_a_level?: number | null
+          pokemon_a_moves?: Json | null
+          pokemon_b_id?: number | null
+          pokemon_b_level?: number | null
+          pokemon_b_moves?: Json | null
+        }
+        Relationships: []
+      }
+      encounters: {
+        Row: {
+          created_at: string
+          game_id: string | null
+          id: number
+          location_id: number | null
+          max_level: number | null
+          method: string | null
+          min_level: number | null
+          pokemon_id: number | null
+          rate: number | null
+        }
+        Insert: {
+          created_at?: string
+          game_id?: string | null
+          id?: number
+          location_id?: number | null
+          max_level?: number | null
+          method?: string | null
+          min_level?: number | null
+          pokemon_id?: number | null
+          rate?: number | null
+        }
+        Update: {
+          created_at?: string
+          game_id?: string | null
+          id?: number
+          location_id?: number | null
+          max_level?: number | null
+          method?: string | null
+          min_level?: number | null
+          pokemon_id?: number | null
+          rate?: number | null
+        }
+        Relationships: []
+      }
       evolution_nodes: {
         Row: {
           chain_id: number
@@ -62,10 +137,308 @@ export type Database = {
           },
         ]
       }
+      games: {
+        Row: {
+          created_at: string
+          id: string
+          name_ar: string | null
+          name_en: string | null
+        }
+        Insert: {
+          created_at?: string
+          id: string
+          name_ar?: string | null
+          name_en?: string | null
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          name_ar?: string | null
+          name_en?: string | null
+        }
+        Relationships: []
+      }
+      gym_roster: {
+        Row: {
+          created_at: string
+          game_id: string | null
+          gym_id: number | null
+          id: number
+          level: number | null
+          moves: Json | null
+          pokemon_id: number | null
+        }
+        Insert: {
+          created_at?: string
+          game_id?: string | null
+          gym_id?: number | null
+          id?: number
+          level?: number | null
+          moves?: Json | null
+          pokemon_id?: number | null
+        }
+        Update: {
+          created_at?: string
+          game_id?: string | null
+          gym_id?: number | null
+          id?: number
+          level?: number | null
+          moves?: Json | null
+          pokemon_id?: number | null
+        }
+        Relationships: []
+      }
+      gyms: {
+        Row: {
+          available_in: string[] | null
+          badge_order: number | null
+          challenge_ar: string | null
+          challenge_en: string | null
+          city_ar: string | null
+          city_en: string | null
+          created_at: string
+          id: number
+          leader_name_ar: string | null
+          leader_name_en: string | null
+          tips_ar: string | null
+          tips_en: string | null
+          type: string | null
+        }
+        Insert: {
+          available_in?: string[] | null
+          badge_order?: number | null
+          challenge_ar?: string | null
+          challenge_en?: string | null
+          city_ar?: string | null
+          city_en?: string | null
+          created_at?: string
+          id: number
+          leader_name_ar?: string | null
+          leader_name_en?: string | null
+          tips_ar?: string | null
+          tips_en?: string | null
+          type?: string | null
+        }
+        Update: {
+          available_in?: string[] | null
+          badge_order?: number | null
+          challenge_ar?: string | null
+          challenge_en?: string | null
+          city_ar?: string | null
+          city_en?: string | null
+          created_at?: string
+          id?: number
+          leader_name_ar?: string | null
+          leader_name_en?: string | null
+          tips_ar?: string | null
+          tips_en?: string | null
+          type?: string | null
+        }
+        Relationships: []
+      }
+      items: {
+        Row: {
+          available_in: string[] | null
+          category: string | null
+          created_at: string
+          effect_ar: string | null
+          effect_en: string | null
+          id: number
+          name_ar: string | null
+          name_en: string
+          obtain: Json | null
+          sprite_url: string | null
+          usage_ar: string | null
+          usage_en: string | null
+        }
+        Insert: {
+          available_in?: string[] | null
+          category?: string | null
+          created_at?: string
+          effect_ar?: string | null
+          effect_en?: string | null
+          id: number
+          name_ar?: string | null
+          name_en: string
+          obtain?: Json | null
+          sprite_url?: string | null
+          usage_ar?: string | null
+          usage_en?: string | null
+        }
+        Update: {
+          available_in?: string[] | null
+          category?: string | null
+          created_at?: string
+          effect_ar?: string | null
+          effect_en?: string | null
+          id?: number
+          name_ar?: string | null
+          name_en?: string
+          obtain?: Json | null
+          sprite_url?: string | null
+          usage_ar?: string | null
+          usage_en?: string | null
+        }
+        Relationships: []
+      }
+      learnsets: {
+        Row: {
+          created_at: string
+          game_id: string | null
+          id: number
+          level: number | null
+          method: string | null
+          move_id: number | null
+          pokemon_id: number | null
+        }
+        Insert: {
+          created_at?: string
+          game_id?: string | null
+          id?: number
+          level?: number | null
+          method?: string | null
+          move_id?: number | null
+          pokemon_id?: number | null
+        }
+        Update: {
+          created_at?: string
+          game_id?: string | null
+          id?: number
+          level?: number | null
+          method?: string | null
+          move_id?: number | null
+          pokemon_id?: number | null
+        }
+        Relationships: []
+      }
+      locations: {
+        Row: {
+          available_in: string[] | null
+          created_at: string
+          id: number
+          map_data: Json | null
+          map_image_url: string | null
+          name_ar: string | null
+          name_en: string
+          notes_ar: string | null
+          notes_en: string | null
+          region: string | null
+        }
+        Insert: {
+          available_in?: string[] | null
+          created_at?: string
+          id: number
+          map_data?: Json | null
+          map_image_url?: string | null
+          name_ar?: string | null
+          name_en: string
+          notes_ar?: string | null
+          notes_en?: string | null
+          region?: string | null
+        }
+        Update: {
+          available_in?: string[] | null
+          created_at?: string
+          id?: number
+          map_data?: Json | null
+          map_image_url?: string | null
+          name_ar?: string | null
+          name_en?: string
+          notes_ar?: string | null
+          notes_en?: string | null
+          region?: string | null
+        }
+        Relationships: []
+      }
+      moves: {
+        Row: {
+          accuracy: number | null
+          available_in: string[] | null
+          category: string | null
+          created_at: string
+          effect_ar: string | null
+          effect_en: string | null
+          id: number
+          name_ar: string | null
+          name_en: string
+          power: number | null
+          pp: number | null
+          type: string | null
+        }
+        Insert: {
+          accuracy?: number | null
+          available_in?: string[] | null
+          category?: string | null
+          created_at?: string
+          effect_ar?: string | null
+          effect_en?: string | null
+          id: number
+          name_ar?: string | null
+          name_en: string
+          power?: number | null
+          pp?: number | null
+          type?: string | null
+        }
+        Update: {
+          accuracy?: number | null
+          available_in?: string[] | null
+          category?: string | null
+          created_at?: string
+          effect_ar?: string | null
+          effect_en?: string | null
+          id?: number
+          name_ar?: string | null
+          name_en?: string
+          power?: number | null
+          pp?: number | null
+          type?: string | null
+        }
+        Relationships: []
+      }
+      npcs: {
+        Row: {
+          available_in: string[] | null
+          created_at: string
+          game_id: string | null
+          id: number
+          image_url: string | null
+          location_id: number | null
+          name_ar: string | null
+          name_en: string | null
+          role_ar: string | null
+          role_en: string | null
+        }
+        Insert: {
+          available_in?: string[] | null
+          created_at?: string
+          game_id?: string | null
+          id?: number
+          image_url?: string | null
+          location_id?: number | null
+          name_ar?: string | null
+          name_en?: string | null
+          role_ar?: string | null
+          role_en?: string | null
+        }
+        Update: {
+          available_in?: string[] | null
+          created_at?: string
+          game_id?: string | null
+          id?: number
+          image_url?: string | null
+          location_id?: number | null
+          name_ar?: string | null
+          name_en?: string | null
+          role_ar?: string | null
+          role_en?: string | null
+        }
+        Relationships: []
+      }
       pokemon: {
         Row: {
           abilities: Json
           artwork_url: string | null
+          available_in: string[] | null
           created_at: string
           description_ar: string | null
           description_en: string | null
@@ -83,6 +456,7 @@ export type Database = {
         Insert: {
           abilities?: Json
           artwork_url?: string | null
+          available_in?: string[] | null
           created_at?: string
           description_ar?: string | null
           description_en?: string | null
@@ -100,6 +474,7 @@ export type Database = {
         Update: {
           abilities?: Json
           artwork_url?: string | null
+          available_in?: string[] | null
           created_at?: string
           description_ar?: string | null
           description_en?: string | null
