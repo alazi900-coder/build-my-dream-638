@@ -3,6 +3,12 @@ const SW_IMAGES_CACHE = "images-v1";
 // Legacy cache name for backwards compatibility
 const LEGACY_CACHE_NAME = "pokemon-images-v3";
 
+const safeString = (value: unknown, fallback = ""): string =>
+  typeof value === "string" && value.trim() !== "" ? value : fallback;
+
+const safePositiveId = (value: unknown, fallback = 1): number =>
+  typeof value === "number" && Number.isFinite(value) && value > 0 ? value : fallback;
+
 /**
  * Get the image cache (prioritize SW cache, fallback to legacy)
  */
@@ -21,26 +27,27 @@ async function findInCaches(url: string): Promise<Response | null> {
 
   // Fallback to legacy cache
   const legacyCache = await caches.open(LEGACY_CACHE_NAME);
-  return await legacyCache.match(url);
+  return (await legacyCache.match(url)) ?? null;
 }
 
 /**
  * Cache a single image URL
  */
-export async function cacheImage(url: string): Promise<boolean> {
+export async function cacheImage(url: string | null | undefined): Promise<boolean> {
   try {
-    if (!url || url.trim() === "") return false;
+    const safeUrl = safeString(url);
+    if (!safeUrl) return false;
 
     const cache = await getCache();
 
     // Check if already cached
-    const cached = await cache.match(url);
+    const cached = await cache.match(safeUrl);
     if (cached) return true;
 
     // Fetch and cache the image
-    const response = await fetch(url, { mode: "cors" });
+    const response = await fetch(safeUrl, { mode: "cors" });
     if (response.ok) {
-      await cache.put(url, response.clone());
+      await cache.put(safeUrl, response.clone());
       return true;
     }
     return false;
@@ -53,9 +60,11 @@ export async function cacheImage(url: string): Promise<boolean> {
 /**
  * Get cached image as blob URL (for offline display)
  */
-export async function getCachedImage(url: string): Promise<string | null> {
+export async function getCachedImage(url: string | null | undefined): Promise<string | null> {
   try {
-    const response = await findInCaches(url);
+    const safeUrl = safeString(url);
+    if (!safeUrl) return null;
+    const response = await findInCaches(safeUrl);
     if (response) {
       const blob = await response.blob();
       return URL.createObjectURL(blob);
@@ -70,7 +79,7 @@ export async function getCachedImage(url: string): Promise<string | null> {
  * Cache multiple images with progress callback
  */
 export async function cacheImages(
-  urls: string[],
+  urls: Array<string | null | undefined>,
   onProgress?: (done: number, total: number, currentUrl?: string) => void,
 ): Promise<{ success: number; failed: number }> {
   const cache = await getCache();
@@ -78,7 +87,7 @@ export async function cacheImages(
   let failed = 0;
 
   // Filter out empty/invalid URLs and already cached ones
-  const validUrls = urls.filter((url) => url && url.trim() !== "");
+  const validUrls = urls.map((url) => safeString(url)).filter(Boolean);
   const uncachedUrls: string[] = [];
 
   for (const url of validUrls) {
@@ -126,9 +135,11 @@ export async function cacheImages(
 /**
  * Check if an image is cached
  */
-export async function isCached(url: string): Promise<boolean> {
+export async function isCached(url: string | null | undefined): Promise<boolean> {
   try {
-    const response = await findInCaches(url);
+    const safeUrl = safeString(url);
+    if (!safeUrl) return false;
+    const response = await findInCaches(safeUrl);
     return !!response;
   } catch {
     return false;
@@ -185,48 +196,52 @@ export async function clearImageCache(): Promise<void> {
 /**
  * Generate Pokemon sprite URL (small icon)
  */
-export function getPokemonSpriteUrl(pokemonId: number): string {
-  return `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${pokemonId}.png`;
+export function getPokemonSpriteUrl(pokemonId: number | null | undefined): string {
+  return `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${safePositiveId(pokemonId)}.png`;
 }
 
 /**
  * Generate Pokemon artwork URL (higher quality)
  */
-export function getPokemonArtworkUrl(pokemonId: number): string {
-  return `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/${pokemonId}.png`;
+export function getPokemonArtworkUrl(pokemonId: number | null | undefined): string {
+  return `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/${safePositiveId(pokemonId)}.png`;
 }
 
 /**
  * Generate animated Pokemon sprite URL from PokeAPI (Gen 5 Black/White style)
  * Available for Pokemon 1-649 (Gen 1-5)
  */
-export function getPokemonAnimatedSpriteUrl(pokemonId: number): string {
-  return `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/versions/generation-v/black-white/animated/${pokemonId}.gif`;
+export function getPokemonAnimatedSpriteUrl(pokemonId: number | null | undefined): string {
+  return `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/versions/generation-v/black-white/animated/${safePositiveId(pokemonId)}.gif`;
 }
 
 /**
  * Generate animated Pokemon sprite URL from Showdown (wider coverage)
  * Works for all Pokemon including newer generations
  */
-export function getPokemonShowdownSpriteUrl(pokemonName: string): string {
-  const name = pokemonName.toLowerCase().replace(/[^a-z0-9]/g, "");
+export function getPokemonShowdownSpriteUrl(pokemonName: string | null | undefined): string {
+  const name = safeString(pokemonName, "missingno")
+    .toLowerCase()
+    .replace(/[^a-z0-9]/g, "");
   return `https://play.pokemonshowdown.com/sprites/ani/${name}.gif`;
 }
 
 /**
  * Generate shiny animated Pokemon sprite URL from Showdown
  */
-export function getPokemonShowdownShinySpriteUrl(pokemonName: string): string {
-  const name = pokemonName.toLowerCase().replace(/[^a-z0-9]/g, "");
+export function getPokemonShowdownShinySpriteUrl(pokemonName: string | null | undefined): string {
+  const name = safeString(pokemonName, "missingno")
+    .toLowerCase()
+    .replace(/[^a-z0-9]/g, "");
   return `https://play.pokemonshowdown.com/sprites/ani-shiny/${name}.gif`;
 }
 
 /**
  * Generate item sprite URL
  */
-export function getItemSpriteUrl(itemName: string): string {
+export function getItemSpriteUrl(itemName: string | null | undefined): string {
   // Convert name to lowercase and replace spaces with hyphens
-  const slug = itemName
+  const slug = safeString(itemName, "poke-ball")
     .toLowerCase()
     .replace(/\s+/g, "-")
     .replace(/[^a-z0-9-]/g, "");
@@ -236,7 +251,7 @@ export function getItemSpriteUrl(itemName: string): string {
 /**
  * Generate type icon URL (for move type icons)
  */
-export function getMoveTypeIconUrl(typeName: string): string {
+export function getMoveTypeIconUrl(typeName: string | null | undefined): string {
   const typeMap: Record<string, number> = {
     normal: 1,
     fighting: 2,
@@ -257,7 +272,7 @@ export function getMoveTypeIconUrl(typeName: string): string {
     dark: 17,
     fairy: 18,
   };
-  const typeId = typeMap[typeName.toLowerCase()] || 1;
+  const typeId = typeMap[safeString(typeName, "normal").toLowerCase()] || 1;
   return `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/types/generation-viii/sword-shield/${typeId}.png`;
 }
 
@@ -265,7 +280,7 @@ export function getMoveTypeIconUrl(typeName: string): string {
  * Get trainer sprite URL from Showdown (most reliable CORS-friendly source)
  * Maps trainer names to their sprite files
  */
-export function getTrainerSpriteUrl(trainerName: string): string {
+export function getTrainerSpriteUrl(trainerName: string | null | undefined): string {
   // Map common trainer names to their Showdown sprite filenames
   const nameMap: Record<string, string> = {
     // === Kanto Gym Leaders ===
@@ -503,7 +518,7 @@ export function getTrainerSpriteUrl(trainerName: string): string {
     argenta: "argenta",
   };
 
-  const normalizedName = trainerName.toLowerCase().trim();
+  const normalizedName = safeString(trainerName, "trainer").toLowerCase().trim();
   const spriteName = nameMap[normalizedName];
 
   if (spriteName) {
@@ -518,8 +533,8 @@ export function getTrainerSpriteUrl(trainerName: string): string {
 /**
  * Get multiple fallback URLs for a trainer (for fallback chain)
  */
-export function getTrainerFallbackUrls(trainerName: string): string[] {
-  const normalizedName = trainerName.toLowerCase().trim();
+export function getTrainerFallbackUrls(trainerName: string | null | undefined): string[] {
+  const normalizedName = safeString(trainerName, "trainer").toLowerCase().trim();
   const noSpaces = normalizedName.replace(/\s+/g, "");
   const withHyphens = normalizedName.replace(/\s+/g, "-");
 
@@ -558,9 +573,9 @@ export function getItemPlaceholderUrl(): string {
  * Collect all image URLs that need to be cached for offline use
  */
 export function collectAllImageUrls(data: {
-  pokemon: { id: number }[];
-  items: { name_en: string }[];
-  npcs: { image_url: string | null }[];
+  pokemon: { id: number | null | undefined }[];
+  items: { name_en: string | null | undefined }[];
+  npcs: { image_url: string | null | undefined }[];
   locations: { map_image_url?: string | null }[];
 }): string[] {
   const urls: string[] = [];
@@ -629,9 +644,9 @@ export function collectAllImageUrls(data: {
 export function collectSectionImageUrls(
   section: "pokemon" | "items" | "gyms" | "maps",
   data: {
-    pokemon?: { id: number }[];
-    items?: { name_en: string }[];
-    npcs?: { image_url: string | null }[];
+    pokemon?: { id: number | null | undefined }[];
+    items?: { name_en: string | null | undefined }[];
+    npcs?: { image_url: string | null | undefined }[];
     locations?: { map_image_url?: string | null }[];
   },
 ): string[] {

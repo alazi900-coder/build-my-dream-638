@@ -4,6 +4,14 @@
  * Includes RTL utilities and direction helpers
  */
 
+type SupportedLanguage = "en" | "ar";
+
+const safeText = (value: string | null | undefined, fallback = ""): string =>
+  typeof value === "string" && value.trim() !== "" ? value : fallback;
+
+const safeKey = (value: string | null | undefined, fallback = ""): string =>
+  safeText(value, fallback).toLowerCase();
+
 // ============================================================
 // RTL UTILITIES - Centralized direction handling
 // ============================================================
@@ -11,14 +19,14 @@
 /**
  * Check if current language is RTL
  */
-export function isRTL(language: "en" | "ar"): boolean {
+export function isRTL(language: SupportedLanguage): boolean {
   return language === "ar";
 }
 
 /**
  * Get direction attribute value
  */
-export function getDirection(language: "en" | "ar"): "rtl" | "ltr" {
+export function getDirection(language: SupportedLanguage): "rtl" | "ltr" {
   return language === "ar" ? "rtl" : "ltr";
 }
 
@@ -32,8 +40,11 @@ export const LTR_NUMBER_DIR = "ltr" as const;
 /**
  * Format number for display - always LTR in RTL context
  */
-export function formatNumber(num: number | string, language: "en" | "ar"): string {
-  return String(num);
+export function formatNumber(
+  num: number | string | null | undefined,
+  language: SupportedLanguage,
+): string {
+  return String(num ?? 0);
 }
 
 // ============================================================
@@ -86,18 +97,19 @@ export const AR_PLACEHOLDERS = {
  * NEVER returns English in Arabic mode
  */
 export function getLocalizedName(
-  nameEn: string,
+  nameEn: string | null | undefined,
   nameAr: string | null | undefined,
-  language: "en" | "ar",
+  language: SupportedLanguage,
 ): string {
+  const englishName = safeText(nameEn, "Unknown");
   if (language === "ar") {
     // Only use Arabic if it exists AND is different from English
-    if (nameAr && nameAr.trim() !== "" && nameAr !== nameEn) {
+    if (nameAr && nameAr.trim() !== "" && nameAr !== englishName) {
       return nameAr;
     }
     return AR_PLACEHOLDERS.name;
   }
-  return nameEn || "Unknown";
+  return englishName;
 }
 
 /**
@@ -106,16 +118,17 @@ export function getLocalizedName(
 export function getLocalizedDescription(
   textEn: string | null | undefined,
   textAr: string | null | undefined,
-  language: "en" | "ar",
+  language: SupportedLanguage,
   placeholder: string = AR_PLACEHOLDERS.description,
 ): string {
+  const englishText = safeText(textEn);
   if (language === "ar") {
-    if (textAr && textAr.trim() !== "" && textAr !== textEn) {
+    if (textAr && textAr.trim() !== "" && textAr !== englishText) {
       return textAr;
     }
     return placeholder;
   }
-  return textEn || "";
+  return englishText;
 }
 
 /**
@@ -131,19 +144,20 @@ export function hasValidArabic(textAr: string | null | undefined, textEn?: strin
  * Get bilingual display - primary in current language, secondary in other
  */
 export function getBilingualDisplay(
-  nameEn: string,
+  nameEn: string | null | undefined,
   nameAr: string | null | undefined,
-  language: "en" | "ar",
+  language: SupportedLanguage,
 ): { primary: string; secondary: string | null } {
+  const englishName = safeText(nameEn, "Unknown");
   if (language === "ar") {
-    const primary = hasValidArabic(nameAr, nameEn) ? nameAr! : AR_PLACEHOLDERS.name;
+    const primary = hasValidArabic(nameAr, englishName) ? nameAr! : AR_PLACEHOLDERS.name;
     // Only show English as secondary if we have a valid Arabic primary
-    const secondary = hasValidArabic(nameAr, nameEn) ? nameEn : null;
+    const secondary = hasValidArabic(nameAr, englishName) ? englishName : null;
     return { primary, secondary };
   }
   return {
-    primary: nameEn,
-    secondary: hasValidArabic(nameAr, nameEn) ? nameAr : null,
+    primary: englishName,
+    secondary: hasValidArabic(nameAr, englishName) ? safeText(nameAr) : null,
   };
 }
 
@@ -175,9 +189,13 @@ export const TYPE_LABELS: Record<string, { en: string; ar: string }> = {
 /**
  * Get localized type name
  */
-export function getLocalizedType(type: string, language: "en" | "ar"): string {
-  const label = TYPE_LABELS[type.toLowerCase()];
-  if (!label) return type;
+export function getLocalizedType(
+  type: string | null | undefined,
+  language: SupportedLanguage,
+): string {
+  const safeType = safeText(type, AR_PLACEHOLDERS.unknown);
+  const label = TYPE_LABELS[safeKey(type)];
+  if (!label) return safeType;
   return language === "ar" ? label.ar : label.en;
 }
 
@@ -195,9 +213,13 @@ export const CATEGORY_LABELS: Record<string, { en: string; ar: string }> = {
 /**
  * Get localized category name
  */
-export function getLocalizedCategory(category: string, language: "en" | "ar"): string {
-  const label = CATEGORY_LABELS[category.toLowerCase()];
-  if (!label) return category;
+export function getLocalizedCategory(
+  category: string | null | undefined,
+  language: SupportedLanguage,
+): string {
+  const safeCategory = safeText(category, "other");
+  const label = CATEGORY_LABELS[safeKey(category, "other")];
+  if (!label) return safeCategory;
   return language === "ar" ? label.ar : label.en;
 }
 
@@ -217,9 +239,13 @@ export const LEARN_METHOD_LABELS: Record<string, { en: string; ar: string }> = {
 /**
  * Get localized learn method name
  */
-export function getLocalizedLearnMethod(method: string, language: "en" | "ar"): string {
-  const label = LEARN_METHOD_LABELS[method.toLowerCase()];
-  if (!label) return method;
+export function getLocalizedLearnMethod(
+  method: string | null | undefined,
+  language: SupportedLanguage,
+): string {
+  const safeMethod = safeText(method, "other");
+  const label = LEARN_METHOD_LABELS[safeKey(method, "other")];
+  if (!label) return safeMethod;
   return language === "ar" ? label.ar : label.en;
 }
 
@@ -243,12 +269,13 @@ export const STAT_LABELS: Record<
  * Get localized stat name
  */
 export function getLocalizedStat(
-  stat: string,
-  language: "en" | "ar",
+  stat: string | null | undefined,
+  language: SupportedLanguage,
   short: boolean = true,
 ): string {
-  const label = STAT_LABELS[stat.toLowerCase()];
-  if (!label) return stat;
+  const safeStat = safeText(stat, AR_PLACEHOLDERS.unknown);
+  const label = STAT_LABELS[safeKey(stat)];
+  if (!label) return safeStat;
   if (language === "ar") {
     return short ? label.arShort : label.ar;
   }
@@ -295,9 +322,13 @@ export const LOCATION_CATEGORY_LABELS: Record<string, { en: string; ar: string }
 /**
  * Get localized location category name
  */
-export function getLocalizedLocationCategory(category: string, language: "en" | "ar"): string {
-  const label = LOCATION_CATEGORY_LABELS[category.toLowerCase()];
-  if (!label) return category;
+export function getLocalizedLocationCategory(
+  category: string | null | undefined,
+  language: SupportedLanguage,
+): string {
+  const safeCategory = safeText(category, "other");
+  const label = LOCATION_CATEGORY_LABELS[safeKey(category, "other")];
+  if (!label) return safeCategory;
   return language === "ar" ? label.ar : label.en;
 }
 
@@ -332,11 +363,15 @@ export const ENCOUNTER_METHOD_LABELS: Record<string, { en: string; ar: string }>
 /**
  * Get localized encounter method name
  */
-export function getLocalizedEncounterMethod(method: string, language: "en" | "ar"): string {
-  const label = ENCOUNTER_METHOD_LABELS[method.toLowerCase()];
+export function getLocalizedEncounterMethod(
+  method: string | null | undefined,
+  language: SupportedLanguage,
+): string {
+  const safeMethod = safeText(method, "unknown");
+  const label = ENCOUNTER_METHOD_LABELS[safeKey(method)];
   if (!label) {
     // Return the method with first letter capitalized if not found
-    return method.charAt(0).toUpperCase() + method.slice(1).replace(/-/g, " ");
+    return safeMethod.charAt(0).toUpperCase() + safeMethod.slice(1).replace(/-/g, " ");
   }
   return language === "ar" ? label.ar : label.en;
 }

@@ -5,8 +5,9 @@ import { useLanguage } from "@/original/contexts/LanguageContext";
 import { Badge } from "@/original/components/ui/badge";
 import { MapPin, Swords, Users } from "lucide-react";
 
-// Mapbox public token
+// Mapbox public token - read from environment variable
 mapboxgl.accessToken =
+  import.meta.env.VITE_MAPBOX_TOKEN ||
   "pk.eyJ1IjoibmFuaXRhMSIsImEiOiJjbWpuejJ5M2UydHNnM2ZxeHo5cjkzamFlIn0.KZN5kfLPJQAZqlyC2HBh-w";
 
 interface Location {

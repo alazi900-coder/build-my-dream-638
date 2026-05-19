@@ -73,7 +73,7 @@ const drawerItems = [
   { path: "/admin", icon: Wrench, labelKey: "nav.admin", descKey: "more.admin.desc" },
 ];
 
-export function BottomNav(): JSX.Element {
+export function BottomNav() {
   const location = useLocation();
   const navigate = useNavigate();
   const { tr, language } = useLanguage();

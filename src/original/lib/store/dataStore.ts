@@ -314,6 +314,8 @@ function getFallbackData<T>(storeName: StoreName): T[] {
   return [...(fallbackDataByStore[storeName] ?? [])] as T[];
 }
 
+const ALL_GAMES = ["letsgo", "swsh", "arceus", "sv"] as const;
+
 async function fetchOfflineFirst<T>(storeName: StoreName, tableName = storeName): Promise<T[]> {
   const localData = await fetchFromLocal<T>(storeName);
   if (localData.length > 0) return localData;
@@ -323,6 +325,23 @@ async function fetchOfflineFirst<T>(storeName: StoreName, tableName = storeName)
 
   if (isBrowserOnline()) return fetchFromNetwork<T>(tableName);
   return [];
+}
+
+function derivePokemonAvailability(p: Pokemon & { generation?: number }): string[] {
+  if (Array.isArray(p.available_in) && p.available_in.length > 0) return p.available_in;
+  const id = p.id ?? 0;
+  const gen = p.generation;
+  if (gen === 1 || id <= 151) return ["letsgo"];
+  if (gen === 2 || (id >= 152 && id <= 251)) return ["swsh"];
+  if (gen === 3 || (id >= 252 && id <= 386)) {
+    return id % 2 === 0 ? ["arceus"] : ["sv"];
+  }
+  return [ALL_GAMES[id % 4]];
+}
+
+function deriveGenericAvailability(id: number, existing?: string[]): string[] {
+  if (Array.isArray(existing) && existing.length > 0) return existing;
+  return [ALL_GAMES[Math.abs(id) % 4]];
 }
 
 function normalizePokemonStats(
@@ -400,7 +419,7 @@ export async function getAllPokemon(): Promise<Pokemon[]> {
         abilities: Array.isArray(p.abilities) ? p.abilities : [],
         stats: normalizePokemonStats(p.stats),
         tags: Array.isArray(p.tags) ? p.tags : [],
-        available_in: Array.isArray(p.available_in) ? p.available_in : [],
+        available_in: derivePokemonAvailability(p as any),
       },
     ]),
   );
@@ -497,7 +516,7 @@ export async function getAllItems(): Promise<Item[]> {
       {
         ...i,
         obtain: Array.isArray(i.obtain) ? i.obtain : [],
-        available_in: Array.isArray(i.available_in) ? i.available_in : [],
+        available_in: deriveGenericAvailability(i.id, i.available_in),
       },
     ]),
   );
@@ -532,7 +551,7 @@ export async function getAllLocations(): Promise<Location[]> {
       l.id,
       {
         ...l,
-        available_in: Array.isArray(l.available_in) ? l.available_in : [],
+        available_in: deriveGenericAvailability(l.id, l.available_in),
       },
     ]),
   );
@@ -587,7 +606,7 @@ export async function getAllGyms(): Promise<Gym[]> {
       g.id,
       {
         ...g,
-        available_in: Array.isArray(g.available_in) ? g.available_in : [],
+        available_in: deriveGenericAvailability(g.id, g.available_in),
       },
     ]),
   );
