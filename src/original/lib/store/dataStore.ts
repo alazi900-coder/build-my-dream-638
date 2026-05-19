@@ -176,6 +176,7 @@ export interface OfflinePackMeta {
     learnsets: number;
     evolution_nodes: number;
     games: number;
+    pokemon_held_items: number;
   };
 }
 
@@ -242,6 +243,7 @@ export function getOfflinePackMeta(): OfflinePackMeta {
       learnsets: 0,
       evolution_nodes: 0,
       games: 0,
+      pokemon_held_items: 0,
     },
   };
 }
@@ -269,6 +271,7 @@ export async function updatePackMetaCounts(): Promise<void> {
     learnsets: await getStoreCount("learnsets"),
     evolution_nodes: await getStoreCount("evolution_nodes"),
     games: await getStoreCount("games"),
+    pokemon_held_items: await getStoreCount("pokemon_held_items"),
   };
 
   setOfflinePackMeta({

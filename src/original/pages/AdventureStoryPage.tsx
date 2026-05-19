@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { supabase } from "@/original/integrations/supabase/client";
+import { supabase, hasSupabaseConfig } from "@/original/integrations/supabase/client";
 import { useLanguage } from "@/original/contexts/LanguageContext";
 import { Layout } from "@/original/components/layout/Layout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/original/components/ui/card";
@@ -40,12 +40,27 @@ import {
   getAllAdventures,
   ACHIEVEMENTS,
 } from "@/original/lib/adventureStorage";
+import { getAllPokemon } from "@/original/lib/store/dataStore";
 
 interface HeroConfig {
   heroName: string;
   mainPokemonId: string;
   companionPokemonId: string;
   startingRegion: string;
+}
+
+interface StoryPokemon {
+  id: number;
+  name_en: string;
+  name_ar: string;
+  types: string[];
+  is_legendary: boolean;
+}
+
+interface StoryGeneratorResult {
+  story: string;
+  choices: string[];
+  error?: string;
 }
 
 // Enhanced story types with length and difficulty
@@ -134,19 +149,35 @@ export default function AdventureStoryPage() {
   const [activeTab, setActiveTab] = useState<"new" | "saved">("new");
   const [showPreview, setShowPreview] = useState(false);
 
-  const { data: pokemon = [] } = useQuery({
+  const { data: pokemon = [] } = useQuery<StoryPokemon[]>({
     queryKey: ["pokemon-story-selector"],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from("pokemon")
-        .select("id, name_en, name_ar, types, is_legendary")
-        .order("id")
-        .limit(151);
-      if (error) throw error;
-      return (data || []).map((p) => ({
-        ...p,
-        types: Array.isArray(p.types) ? (p.types as string[]) : [],
-        is_legendary: p.is_legendary || false,
+      if (hasSupabaseConfig) {
+        try {
+          const { data, error } = await supabase
+            .from("pokemon")
+            .select("id, name_en, name_ar, types, is_legendary")
+            .order("id")
+            .limit(151);
+          if (!error && data && data.length > 0) {
+            return data.map((p) => ({
+              ...p,
+              types: Array.isArray(p.types) ? (p.types as string[]) : [],
+              is_legendary: p.is_legendary || false,
+            }));
+          }
+        } catch {
+          // Local Pokémon data powers story setup without network access.
+        }
+      }
+
+      const localPokemon = await getAllPokemon();
+      return localPokemon.slice(0, 151).map((p) => ({
+        id: p.id,
+        name_en: p.name_en,
+        name_ar: p.name_ar,
+        types: p.types,
+        is_legendary: p.is_legendary,
       }));
     },
   });
@@ -172,6 +203,11 @@ export default function AdventureStoryPage() {
   };
 
   // Generate mock preview (offline-safe, no AI call)
+  const getOfflineChoices = () =>
+    language === "ar"
+      ? ["استكشاف الطريق", "تدريب الفريق", "البحث عن دليل"]
+      : ["Explore the path", "Train the team", "Search for a clue"];
+
   const generateMockPreview = () => {
     const pokemonData = pokemon.find((p) => p.id.toString() === heroConfig.mainPokemonId);
     const region = regions.find((r) => r.id === heroConfig.startingRegion);
@@ -203,6 +239,23 @@ export default function AdventureStoryPage() {
     };
 
     return templates[selectedStoryType]?.[language] || templates.adventure[language];
+  };
+
+  const generateOfflineContinuation = (choice: string) => {
+    const pokemonData = pokemon.find((p) => p.id.toString() === heroConfig.mainPokemonId);
+    const pokemonName = pokemonData
+      ? language === "ar"
+        ? pokemonData.name_ar
+        : pokemonData.name_en
+      : language === "ar"
+        ? "البوكيمون"
+        : "the Pokémon";
+
+    if (language === "ar") {
+      return `اختار الفريق "${choice}"، فانطلق ${pokemonName} بثقة نحو المرحلة التالية. ظهرت علامات جديدة في الطريق، وكل قرار قرّب المغامرة من نهايتها السعيدة.`;
+    }
+
+    return `The team chose "${choice}", and ${pokemonName} moved confidently into the next stage. New signs appeared along the path, and every decision brought the adventure closer to a happy ending.`;
   };
 
   // Check for achievements
@@ -267,18 +320,30 @@ export default function AdventureStoryPage() {
           ? ` with companion ${companionPokemonData.name_en}`
           : "";
 
-      const { data, error } = await supabase.functions.invoke("ai-story-generator", {
-        body: {
-          pokemon: selectedPokemonData,
-          storyType: selectedStoryType,
-          language,
-          heroName: heroConfig.heroName || undefined,
-          region: heroConfig.startingRegion,
-          companionInfo,
-        },
-      });
+      let data: StoryGeneratorResult = {
+        story: generateMockPreview(),
+        choices: getOfflineChoices(),
+      };
 
-      if (error) throw error;
+      if (hasSupabaseConfig) {
+        const { data: generatedData, error } = await supabase.functions.invoke(
+          "ai-story-generator",
+          {
+            body: {
+              pokemon: selectedPokemonData,
+              storyType: selectedStoryType,
+              language,
+              heroName: heroConfig.heroName || undefined,
+              region: heroConfig.startingRegion,
+              companionInfo,
+            },
+          },
+        );
+
+        if (error) throw error;
+        data = generatedData as StoryGeneratorResult;
+      }
+
       if (data.error) {
         toast.error(data.error);
         return;
@@ -323,18 +388,30 @@ export default function AdventureStoryPage() {
 
     setIsGenerating(true);
     try {
-      const { data, error } = await supabase.functions.invoke("ai-story-generator", {
-        body: {
-          pokemon: selectedPokemonData,
-          storyType: selectedStoryType,
-          previousStory: currentAdventure.segments[currentAdventure.segments.length - 1],
-          choice,
-          language,
-          heroName: currentAdventure.heroName,
-        },
-      });
+      let data: StoryGeneratorResult = {
+        story: generateOfflineContinuation(choice),
+        choices: currentAdventure.choicesMade >= 2 ? [] : getOfflineChoices(),
+      };
 
-      if (error) throw error;
+      if (hasSupabaseConfig) {
+        const { data: generatedData, error } = await supabase.functions.invoke(
+          "ai-story-generator",
+          {
+            body: {
+              pokemon: selectedPokemonData,
+              storyType: selectedStoryType,
+              previousStory: currentAdventure.segments[currentAdventure.segments.length - 1],
+              choice,
+              language,
+              heroName: currentAdventure.heroName,
+            },
+          },
+        );
+
+        if (error) throw error;
+        data = generatedData as StoryGeneratorResult;
+      }
+
       if (data.error) {
         toast.error(data.error);
         return;

@@ -20,7 +20,7 @@ import {
 import { PokemonSelector } from "@/original/components/compare/PokemonSelector";
 import { MoveSelector } from "@/original/components/compare/MoveSelector";
 import { ComparisonView } from "@/original/components/compare/ComparisonView";
-import { supabase } from "@/original/integrations/supabase/client";
+import { supabase, hasSupabaseConfig } from "@/original/integrations/supabase/client";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "@/original/hooks/use-toast";
 import { Scale, Save, FolderOpen, Trash2, RefreshCw, Gamepad2 } from "lucide-react";
@@ -94,8 +94,7 @@ export default function ComparePage() {
       }
     }
 
-    // Also try to fetch from Supabase if online
-    if (navigator.onLine) {
+    if (navigator.onLine && hasSupabaseConfig) {
       supabase
         .from("comparison_presets")
         .select("*")
@@ -105,14 +104,16 @@ export default function ComparePage() {
             setPresets(data as ComparisonPreset[]);
             localStorage.setItem("comparison-presets", JSON.stringify(data));
           }
-        });
+        })
+        .catch(() => undefined);
     }
   }, [selectedGame]);
 
   const savePresetMutation = useMutation({
     mutationFn: async (name: string) => {
       if (!pokemonA || !pokemonB) throw new Error("Select both Pokémon");
-      const { error } = await supabase.from("comparison_presets").insert({
+      const preset: ComparisonPreset = {
+        id: crypto.randomUUID(),
         name,
         pokemon_a_id: pokemonA.id,
         pokemon_a_level: levelA,
@@ -121,7 +122,20 @@ export default function ComparePage() {
         pokemon_b_level: levelB,
         pokemon_b_moves: movesB.map((m) => m.id),
         game_id: selectedGame === "all" ? "swsh" : selectedGame,
-      });
+        created_at: new Date().toISOString(),
+      };
+
+      if (!hasSupabaseConfig) {
+        const nextPresets = [preset, ...presets];
+        setPresets(nextPresets);
+        localStorage.setItem("comparison-presets", JSON.stringify(nextPresets));
+        return;
+      }
+
+      const { id, created_at: createdAt, ...payload } = preset;
+      void id;
+      void createdAt;
+      const { error } = await supabase.from("comparison_presets").insert(payload);
       if (error) throw error;
     },
     onSuccess: () => {
@@ -144,6 +158,11 @@ export default function ComparePage() {
 
   const deletePresetMutation = useMutation({
     mutationFn: async (id: string) => {
+      const nextPresets = presets.filter((preset) => preset.id !== id);
+      setPresets(nextPresets);
+      localStorage.setItem("comparison-presets", JSON.stringify(nextPresets));
+      if (!hasSupabaseConfig) return;
+
       const { error } = await supabase.from("comparison_presets").delete().eq("id", id);
       if (error) throw error;
     },

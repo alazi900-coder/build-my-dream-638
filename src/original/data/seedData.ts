@@ -3164,12 +3164,140 @@ const gymsData = [
 // Combine all Pokemon data
 const allPokemonData = [...pokemonData, ...pokemonData2, ...pokemonData3];
 
+type SeedPokemon = (typeof allPokemonData)[number];
+
+type SeedEvolutionEntry = {
+  pokemon_id: number;
+  method_en?: string | null;
+  method_ar?: string | null;
+};
+
+const fallbackGamesData = [
+  { id: "swsh", name_en: "Sword & Shield", name_ar: "السيف والدرع", generation: 8 },
+  { id: "letsgo", name_en: "Let's Go", name_ar: "لنذهب", generation: 7 },
+  { id: "arceus", name_en: "Legends: Arceus", name_ar: "أساطير: أرسيوس", generation: 8 },
+] as const;
+
+const fallbackEncountersData = locationsData.flatMap((location, locationIndex) => {
+  const pokemonForLocation = allPokemonData.slice(locationIndex * 6, locationIndex * 6 + 6);
+  return pokemonForLocation.map((pokemon, index) => ({
+    id: location.id * 100 + index + 1,
+    pokemon_id: pokemon.id,
+    location_id: location.id,
+    method: index % 2 === 0 ? "grass" : "overworld",
+    rate: Math.max(5, 35 - index * 5),
+    min_level: 3 + locationIndex * 4,
+    max_level: 8 + locationIndex * 4,
+    game_id: "swsh",
+  }));
+});
+
+const fallbackGymRosterData = gymsData.flatMap((gym, gymIndex) =>
+  allPokemonData
+    .filter((pokemon) => pokemon.types?.includes(gym.type))
+    .slice(0, 3)
+    .map((pokemon, index) => ({
+      id: gym.id * 100 + index + 1,
+      gym_id: gym.id,
+      pokemon_id: pokemon.id,
+      level: 12 + gymIndex * 5 + index * 2,
+      moves: movesData
+        .filter((move) => move.type === gym.type || move.type === "normal")
+        .slice(0, 4)
+        .map((move) => move.id),
+    })),
+);
+
+const fallbackNPCsData = locationsData.map((location, index) => ({
+  id: index + 1,
+  name_en: `${location.name_en} Guide`,
+  name_ar: `مرشد ${location.name_ar}`,
+  role_en: "Guide",
+  role_ar: "مرشد",
+  location_id: location.id,
+  dialogue_en: `Welcome to ${location.name_en}. Explore carefully and prepare your team.`,
+  dialogue_ar: `مرحباً بك في ${location.name_ar}. استكشف بحذر وجهز فريقك.`,
+  game_id: "swsh",
+}));
+
+function getSeedEvolutionEntries(pokemon: SeedPokemon): readonly SeedEvolutionEntry[] {
+  const evolution = pokemon.evolution as
+    | { chain?: readonly SeedEvolutionEntry[] }
+    | null
+    | undefined;
+  return evolution?.chain ?? [];
+}
+
+function getEvolutionMethodType(method: string): string {
+  const normalized = method.toLowerCase();
+  if (normalized.includes("level") || normalized.includes("مستوى")) return "level";
+  if (normalized.includes("stone") || normalized.includes("item") || normalized.includes("حجر"))
+    return "item";
+  if (normalized.includes("trade") || normalized.includes("تبادل")) return "trade";
+  if (normalized.includes("friend") || normalized.includes("صداقة")) return "friendship";
+  return "other";
+}
+
+function getEvolutionLevel(method: string): number | null {
+  const match = method.match(/\d+/);
+  return match ? Number(match[0]) : null;
+}
+
+const fallbackEvolutionNodesData = allPokemonData.flatMap((pokemon) => {
+  const chain = getSeedEvolutionEntries(pokemon);
+  return chain.slice(1).map((entry, index) => {
+    const previous = chain[index];
+    const methodEn = entry.method_en || "Evolution";
+    return {
+      id: pokemon.id * 10 + index + 1,
+      pokemon_id: previous?.pokemon_id ?? pokemon.id,
+      evolves_to_pokemon_id: entry.pokemon_id,
+      method_type: getEvolutionMethodType(methodEn),
+      level: getEvolutionLevel(methodEn),
+      item_id: null,
+      conditions_en: entry.method_en || null,
+      conditions_ar: entry.method_ar || null,
+      game_id: "swsh",
+    };
+  });
+});
+
+const fallbackLearnsetsData = allPokemonData.flatMap((pokemon) => {
+  const typedMoves = movesData.filter(
+    (move) => pokemon.types?.includes(move.type) || move.type === "normal",
+  );
+  const selectedMoves = typedMoves.length > 0 ? typedMoves.slice(0, 8) : movesData.slice(0, 8);
+  return selectedMoves.map((move, index) => ({
+    id: pokemon.id * 100 + index + 1,
+    pokemon_id: pokemon.id,
+    move_id: move.id,
+    learn_method: index < 4 ? "level" : "tm",
+    level: index < 4 ? 1 + index * 8 : null,
+    game_id: "swsh",
+  }));
+});
+
+const fallbackPokemonHeldItemsData = allPokemonData.slice(0, 40).map((pokemon, index) => ({
+  id: index + 1,
+  pokemon_id: pokemon.id,
+  item_id: itemsData[index % itemsData.length].id,
+  version_id: "swsh",
+  rarity: index % 3 === 0 ? "rare" : "common",
+}));
+
 export const localSeedData = {
   pokemon: allPokemonData,
   moves: movesData,
   items: itemsData,
   locations: locationsData,
+  encounters: fallbackEncountersData,
   gyms: gymsData,
+  gym_roster: fallbackGymRosterData,
+  npcs: fallbackNPCsData,
+  learnsets: fallbackLearnsetsData,
+  evolution_nodes: fallbackEvolutionNodesData,
+  games: fallbackGamesData,
+  pokemon_held_items: fallbackPokemonHeldItemsData,
 } as const;
 
 export interface SeedResult {

@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { supabase } from "@/original/integrations/supabase/client";
+import { supabase, hasSupabaseConfig } from "@/original/integrations/supabase/client";
 import { useLanguage } from "@/original/contexts/LanguageContext";
 import { Layout } from "@/original/components/layout/Layout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/original/components/ui/card";
@@ -19,6 +19,7 @@ import { ScrollArea } from "@/original/components/ui/scroll-area";
 import { Palette, Sparkles, Download, Trash2, Loader2, Image as ImageIcon } from "lucide-react";
 import { toast } from "sonner";
 import { getPokemonSprite } from "@/original/services/pokeApiService";
+import { getAllPokemon } from "@/original/lib/store/dataStore";
 
 interface GeneratedImage {
   id: string;
@@ -27,6 +28,12 @@ interface GeneratedImage {
   style: string;
   pokemonName?: string;
   createdAt: number;
+}
+
+interface PokemonOption {
+  id: number;
+  name_en: string;
+  name_ar: string;
 }
 
 const STORAGE_KEY = "pokemon-generated-art";
@@ -47,20 +54,36 @@ export default function AIArtPage() {
   const [selectedStyle, setSelectedStyle] = useState("anime");
   const [isGenerating, setIsGenerating] = useState(false);
   const [generatedImages, setGeneratedImages] = useState<GeneratedImage[]>(() => {
-    const saved = localStorage.getItem(STORAGE_KEY);
-    return saved ? JSON.parse(saved) : [];
+    try {
+      const saved = localStorage.getItem(STORAGE_KEY);
+      return saved ? (JSON.parse(saved) as GeneratedImage[]) : [];
+    } catch {
+      return [];
+    }
   });
 
-  const { data: pokemon = [] } = useQuery({
+  const { data: pokemon = [] } = useQuery<PokemonOption[]>({
     queryKey: ["pokemon-art-selector"],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from("pokemon")
-        .select("id, name_en, name_ar")
-        .order("id")
-        .limit(151);
-      if (error) throw error;
-      return data || [];
+      if (hasSupabaseConfig) {
+        try {
+          const { data, error } = await supabase
+            .from("pokemon")
+            .select("id, name_en, name_ar")
+            .order("id")
+            .limit(151);
+          if (!error && data && data.length > 0) return data as PokemonOption[];
+        } catch {
+          // Local data remains available when the network is unavailable.
+        }
+      }
+
+      const localPokemon = await getAllPokemon();
+      return localPokemon.slice(0, 151).map((p) => ({
+        id: p.id,
+        name_en: p.name_en,
+        name_ar: p.name_ar,
+      }));
     },
   });
 
@@ -70,6 +93,16 @@ export default function AIArtPage() {
     if (!selectedPokemon && !customPrompt.trim()) {
       toast.error(
         t("Please select a Pokémon or enter a custom prompt", "الرجاء اختيار بوكيمون أو كتابة وصف"),
+      );
+      return;
+    }
+
+    if (!hasSupabaseConfig) {
+      toast.error(
+        t(
+          "AI image generation needs an online Supabase configuration.",
+          "إنشاء الصور بالذكاء الاصطناعي يحتاج إعداد Supabase متصل.",
+        ),
       );
       return;
     }
