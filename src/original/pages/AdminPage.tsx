@@ -66,6 +66,7 @@ import {
   CollapsibleTrigger,
 } from "@/original/components/ui/collapsible";
 import { cn } from "@/original/lib/utils";
+import { DataHealthCheck } from "@/original/components/admin/DataHealthCheck";
 
 type TableName =
   | "pokemon"
@@ -814,6 +815,9 @@ export default function AdminPage() {
     <Layout>
       <div className="p-4 space-y-6 pb-24">
         <h1 className="text-xl font-bold">{t("إدارة البيانات", "إدارة البيانات")}</h1>
+
+        <DataHealthCheck onRefresh={fetchDatabaseStats} />
+
 
         {/* Database Statistics Section */}
         <section className="bg-gradient-to-br from-primary/5 to-chart-2/5 border border-border rounded-xl p-5 space-y-5">
