@@ -66,6 +66,7 @@ import {
   CollapsibleTrigger,
 } from "@/original/components/ui/collapsible";
 import { cn } from "@/original/lib/utils";
+import { DataHealthCheck } from "@/original/components/admin/DataHealthCheck";
 
 type TableName =
   | "pokemon"
