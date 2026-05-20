@@ -145,7 +145,7 @@ async function seedGyms() {
     tips_en: `Bring Pokémon strong against ${g.type}-type.`,
     tips_ar: `أحضر بوكيمونات قوية ضد نوع ${g.type}.`,
   }));
-  const { error } = await supabaseAdmin.from("gyms").upsert(rows);
+  const { error } = await supabaseAdmin.from("gyms").upsert(rows as any);
   return { inserted: error ? 0 : rows.length, errors: error ? rows.length : 0 };
 }
 
