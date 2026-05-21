@@ -176,6 +176,7 @@ export interface OfflinePackMeta {
     learnsets: number;
     evolution_nodes: number;
     games: number;
+    pokemon_held_items: number;
   };
 }
 
@@ -242,6 +243,7 @@ export function getOfflinePackMeta(): OfflinePackMeta {
       learnsets: 0,
       evolution_nodes: 0,
       games: 0,
+      pokemon_held_items: 0,
     },
   };
 }
@@ -269,6 +271,7 @@ export async function updatePackMetaCounts(): Promise<void> {
     learnsets: await getStoreCount("learnsets"),
     evolution_nodes: await getStoreCount("evolution_nodes"),
     games: await getStoreCount("games"),
+    pokemon_held_items: await getStoreCount("pokemon_held_items"),
   };
 
   setOfflinePackMeta({
@@ -313,15 +316,24 @@ function getFallbackData<T>(storeName: StoreName): T[] {
 
 const ALL_GAMES = ["letsgo", "swsh", "arceus", "sv"] as const;
 
+async function fetchOfflineFirst<T>(storeName: StoreName, tableName = storeName): Promise<T[]> {
+  const localData = await fetchFromLocal<T>(storeName);
+  if (localData.length > 0) return localData;
+
+  const fallbackData = getFallbackData<T>(storeName);
+  if (fallbackData.length > 0) return fallbackData;
+
+  if (isBrowserOnline()) return fetchFromNetwork<T>(tableName);
+  return [];
+}
+
 function derivePokemonAvailability(p: Pokemon & { generation?: number }): string[] {
   if (Array.isArray(p.available_in) && p.available_in.length > 0) return p.available_in;
   const id = p.id ?? 0;
-  const gen = (p as any).generation as number | undefined;
-  // Distribute by generation so each game has a distinct dex
+  const gen = p.generation;
   if (gen === 1 || id <= 151) return ["letsgo"];
   if (gen === 2 || (id >= 152 && id <= 251)) return ["swsh"];
   if (gen === 3 || (id >= 252 && id <= 386)) {
-    // Alternate gen 3 between arceus and sv
     return id % 2 === 0 ? ["arceus"] : ["sv"];
   }
   return [ALL_GAMES[id % 4]];
@@ -396,13 +408,7 @@ export async function getAllPokemon(): Promise<Pokemon[]> {
     return Array.from(pokemonCache.data.values());
   }
 
-  let data = await fetchFromLocal<Pokemon>("pokemon");
-  if (data.length === 0 && isBrowserOnline()) {
-    data = await fetchFromNetwork<Pokemon>("pokemon");
-  }
-  if (data.length === 0) {
-    data = getFallbackData<Pokemon>("pokemon");
-  }
+  const data = await fetchOfflineFirst<Pokemon>("pokemon");
 
   const map = new Map(
     data.map((p) => [
@@ -467,13 +473,7 @@ export async function getAllMoves(): Promise<Move[]> {
     return Array.from(movesCache.data.values());
   }
 
-  let data = await fetchFromLocal<Move>("moves");
-  if (data.length === 0 && isBrowserOnline()) {
-    data = await fetchFromNetwork<Move>("moves");
-  }
-  if (data.length === 0) {
-    data = getFallbackData<Move>("moves");
-  }
+  const data = await fetchOfflineFirst<Move>("moves");
 
   const map = new Map(
     data.map((m) => [
@@ -508,13 +508,7 @@ export async function getAllItems(): Promise<Item[]> {
     return Array.from(itemsCache.data.values());
   }
 
-  let data = await fetchFromLocal<Item>("items");
-  if (data.length === 0 && isBrowserOnline()) {
-    data = await fetchFromNetwork<Item>("items");
-  }
-  if (data.length === 0) {
-    data = getFallbackData<Item>("items");
-  }
+  const data = await fetchOfflineFirst<Item>("items");
 
   const map = new Map(
     data.map((i) => [
@@ -550,13 +544,7 @@ export async function getAllLocations(): Promise<Location[]> {
     return Array.from(locationsCache.data.values());
   }
 
-  let data = await fetchFromLocal<Location>("locations");
-  if (data.length === 0 && isBrowserOnline()) {
-    data = await fetchFromNetwork<Location>("locations");
-  }
-  if (data.length === 0) {
-    data = getFallbackData<Location>("locations");
-  }
+  const data = await fetchOfflineFirst<Location>("locations");
 
   const map = new Map(
     data.map((l) => [
@@ -586,10 +574,7 @@ export async function getAllEncounters(): Promise<Encounter[]> {
     return encountersCache.data;
   }
 
-  let data = await fetchFromLocal<Encounter>("encounters");
-  if (data.length === 0 && isBrowserOnline()) {
-    data = await fetchFromNetwork<Encounter>("encounters");
-  }
+  const data = await fetchOfflineFirst<Encounter>("encounters");
 
   encountersCache = { data, timestamp: Date.now() };
   return data;
@@ -614,13 +599,7 @@ export async function getAllGyms(): Promise<Gym[]> {
     return Array.from(gymsCache.data.values());
   }
 
-  let data = await fetchFromLocal<Gym>("gyms");
-  if (data.length === 0 && isBrowserOnline()) {
-    data = await fetchFromNetwork<Gym>("gyms");
-  }
-  if (data.length === 0) {
-    data = getFallbackData<Gym>("gyms");
-  }
+  const data = await fetchOfflineFirst<Gym>("gyms");
 
   const map = new Map(
     data.map((g) => [
@@ -650,10 +629,7 @@ export async function getAllGymRoster(): Promise<GymRoster[]> {
     return gymRosterCache.data;
   }
 
-  let data = await fetchFromLocal<GymRoster>("gym_roster");
-  if (data.length === 0 && isBrowserOnline()) {
-    data = await fetchFromNetwork<GymRoster>("gym_roster");
-  }
+  const data = await fetchOfflineFirst<GymRoster>("gym_roster");
 
   gymRosterCache = { data, timestamp: Date.now() };
   return data;
@@ -673,10 +649,7 @@ export async function getAllNPCs(): Promise<NPC[]> {
     return Array.from(npcsCache.data.values());
   }
 
-  let data = await fetchFromLocal<NPC>("npcs");
-  if (data.length === 0 && isBrowserOnline()) {
-    data = await fetchFromNetwork<NPC>("npcs");
-  }
+  const data = await fetchOfflineFirst<NPC>("npcs");
 
   const map = new Map(data.map((n) => [n.id, n]));
   npcsCache = { data: map, timestamp: Date.now() };
@@ -697,10 +670,7 @@ export async function getAllLearnsets(): Promise<Learnset[]> {
     return learnsetsCache.data;
   }
 
-  let data = await fetchFromLocal<Learnset>("learnsets");
-  if (data.length === 0 && isBrowserOnline()) {
-    data = await fetchFromNetwork<Learnset>("learnsets");
-  }
+  const data = await fetchOfflineFirst<Learnset>("learnsets");
 
   learnsetsCache = { data, timestamp: Date.now() };
   return data;
@@ -725,10 +695,7 @@ export async function getAllEvolutionNodes(): Promise<EvolutionNode[]> {
     return evolutionNodesCache.data;
   }
 
-  let data = await fetchFromLocal<EvolutionNode>("evolution_nodes");
-  if (data.length === 0 && isBrowserOnline()) {
-    data = await fetchFromNetwork<EvolutionNode>("evolution_nodes");
-  }
+  const data = await fetchOfflineFirst<EvolutionNode>("evolution_nodes");
 
   evolutionNodesCache = { data, timestamp: Date.now() };
   return data;
@@ -748,10 +715,7 @@ export async function getAllGames(): Promise<Game[]> {
     return Array.from(gamesCache.data.values());
   }
 
-  let data = await fetchFromLocal<Game>("games");
-  if (data.length === 0 && isBrowserOnline()) {
-    data = await fetchFromNetwork<Game>("games");
-  }
+  const data = await fetchOfflineFirst<Game>("games");
 
   const map = new Map(data.map((g) => [g.id, g]));
   gamesCache = { data: map, timestamp: Date.now() };
@@ -774,10 +738,7 @@ export async function getAllPokemonHeldItems(): Promise<PokemonHeldItem[]> {
     return pokemonHeldItemsCache.data;
   }
 
-  let data = await fetchFromLocal<PokemonHeldItem>("pokemon_held_items");
-  if (data.length === 0 && isBrowserOnline()) {
-    data = await fetchFromNetwork<PokemonHeldItem>("pokemon_held_items");
-  }
+  const data = await fetchOfflineFirst<PokemonHeldItem>("pokemon_held_items");
 
   pokemonHeldItemsCache = { data, timestamp: Date.now() };
   return data;

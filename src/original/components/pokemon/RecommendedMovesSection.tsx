@@ -3,8 +3,8 @@ import { useLanguage } from "@/original/contexts/LanguageContext";
 import { Card, CardContent } from "@/original/components/ui/card";
 import { Badge } from "@/original/components/ui/badge";
 import { TypeBadge } from "@/original/components/ui/type-badge";
-import { supabase } from "@/original/integrations/supabase/client";
 import { useQuery } from "@tanstack/react-query";
+import { getAllMoves, getLearnsetsByPokemon } from "@/original/lib/store/dataStore";
 import { Lightbulb, AlertTriangle, Zap, Sword } from "lucide-react";
 import { cn } from "@/original/lib/utils";
 
@@ -46,22 +46,14 @@ interface Props {
 export function RecommendedMovesSection({ pokemonId, pokemonTypes, stats }: Props) {
   const { tr, language } = useLanguage();
 
-  // Fetch learnsets for this pokemon
   const { data: learnsets } = useQuery({
     queryKey: ["learnsets-for-recommendations", pokemonId],
-    queryFn: async () => {
-      const { data } = await supabase.from("learnsets").select("*").eq("pokemon_id", pokemonId);
-      return (data || []) as Learnset[];
-    },
+    queryFn: async () => getLearnsetsByPokemon(pokemonId),
   });
 
-  // Fetch all moves
   const { data: allMoves } = useQuery({
     queryKey: ["all-moves-for-recommendations"],
-    queryFn: async () => {
-      const { data } = await supabase.from("moves").select("*");
-      return (data || []) as Move[];
-    },
+    queryFn: async () => getAllMoves() as Promise<Move[]>,
   });
 
   // Calculate recommended moves

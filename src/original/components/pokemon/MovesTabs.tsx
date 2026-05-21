@@ -10,12 +10,15 @@ import { Card, CardContent } from "@/original/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/original/components/ui/tabs";
 import { Badge } from "@/original/components/ui/badge";
 import { TypeBadge } from "@/original/components/ui/type-badge";
-import { supabase } from "@/original/integrations/supabase/client";
 import { useQuery } from "@tanstack/react-query";
 import { Star, TrendingUp, Layers, Zap, Sword, Sparkles, BookOpen, Info } from "lucide-react";
 import { cn } from "@/original/lib/utils";
 import { getLocalizedName, AR_PLACEHOLDERS } from "@/original/lib/localization";
-import { getDB } from "@/original/lib/db";
+import {
+  getAllLearnsets,
+  getAllMoves,
+  getLearnsetsByPokemon,
+} from "@/original/lib/store/dataStore";
 import { LearnsetSection } from "./LearnsetSection";
 
 interface Move {
@@ -65,73 +68,29 @@ export function MovesTabs({ pokemonId, pokemonName, pokemonTypes, stats, evoluti
   const { selectedGame } = useGameFilter();
   const [activeTab, setActiveTab] = useState("best");
 
-  // Fetch learnsets for this pokemon
   const { data: learnsets } = useQuery({
     queryKey: ["learnsets-tabs", pokemonId, selectedGame],
-    queryFn: async () => {
-      try {
-        const db = await getDB();
-        const allLearnsets = await db.getAll("learnsets");
-        const filtered = allLearnsets.filter(
-          (ls) =>
-            ls.pokemon_id === pokemonId && (selectedGame === "all" || ls.game_id === selectedGame),
-        );
-        if (filtered.length > 0) return filtered as unknown as Learnset[];
-      } catch (e) {
-        console.warn("IndexedDB read failed");
-      }
-
-      let query = supabase.from("learnsets").select("*").eq("pokemon_id", pokemonId);
-      if (selectedGame !== "all") query = query.eq("game_id", selectedGame);
-      const { data } = await query;
-      return (data || []) as Learnset[];
-    },
+    queryFn: async () => getLearnsetsByPokemon(pokemonId, selectedGame) as Promise<Learnset[]>,
   });
 
-  // Fetch evolution learnsets if there's an evolution
   const { data: evolutionLearnsets } = useQuery({
     queryKey: ["evolution-learnsets-tabs", evolutionInfo?.evolutionIds, selectedGame],
     queryFn: async () => {
       if (!evolutionInfo?.hasEvolution || !evolutionInfo.evolutionIds.length) return [];
 
-      try {
-        const db = await getDB();
-        const allLearnsets = await db.getAll("learnsets");
-        const filtered = allLearnsets.filter(
-          (ls) =>
-            evolutionInfo.evolutionIds.includes(ls.pokemon_id) &&
-            (selectedGame === "all" || ls.game_id === selectedGame),
-        );
-        if (filtered.length > 0) return filtered as unknown as Learnset[];
-      } catch (e) {
-        console.warn("IndexedDB read failed");
-      }
-
-      let query = supabase
-        .from("learnsets")
-        .select("*")
-        .in("pokemon_id", evolutionInfo.evolutionIds);
-      if (selectedGame !== "all") query = query.eq("game_id", selectedGame);
-      const { data } = await query;
-      return (data || []) as Learnset[];
+      const data = await getAllLearnsets();
+      return data.filter(
+        (ls) =>
+          evolutionInfo.evolutionIds.includes(ls.pokemon_id) &&
+          (selectedGame === "all" || ls.game_id === selectedGame),
+      ) as Learnset[];
     },
     enabled: evolutionInfo?.hasEvolution && evolutionInfo.evolutionIds.length > 0,
   });
 
-  // Fetch all moves
   const { data: allMoves } = useQuery({
     queryKey: ["all-moves-tabs"],
-    queryFn: async () => {
-      try {
-        const db = await getDB();
-        const cached = await db.getAll("moves");
-        if (cached.length > 0) return cached as unknown as Move[];
-      } catch (e) {
-        console.warn("IndexedDB read failed");
-      }
-      const { data } = await supabase.from("moves").select("*");
-      return (data || []) as Move[];
-    },
+    queryFn: async () => getAllMoves() as Promise<Move[]>,
   });
 
   // Calculate best moves now (STAB + coverage)

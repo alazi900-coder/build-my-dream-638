@@ -3,8 +3,14 @@ import { useNavigate } from "react-router-dom";
 import { Search } from "lucide-react";
 import { useLanguage } from "@/original/contexts/LanguageContext";
 import { useGameFilter } from "@/original/contexts/GameFilterContext";
-import { supabase } from "@/original/integrations/supabase/client";
-import { getDB } from "@/original/lib/db";
+import { supabase, hasSupabaseConfig } from "@/original/integrations/supabase/client";
+import {
+  getAllGyms,
+  getAllItems,
+  getAllLocations,
+  getAllMoves,
+  getAllPokemon,
+} from "@/original/lib/store/dataStore";
 import { getPokemonSprite } from "@/original/services/pokeApiService";
 import { Button } from "@/original/components/ui/button";
 import { Dialog, DialogContent } from "@/original/components/ui/dialog";
@@ -61,16 +67,19 @@ export function GlobalSearch() {
     };
   }, []);
 
-  // Search from IndexedDB first, then Supabase
-  const searchFromIndexedDB = useCallback(async (term: string): Promise<SearchResult[]> => {
+  const searchFromLocalData = useCallback(async (term: string): Promise<SearchResult[]> => {
     const allResults: SearchResult[] = [];
     const lowerTerm = term.toLowerCase();
 
     try {
-      const db = await getDB();
+      const [allPokemon, allMoves, allItems, allLocations, allGyms] = await Promise.all([
+        getAllPokemon(),
+        getAllMoves(),
+        getAllItems(),
+        getAllLocations(),
+        getAllGyms(),
+      ]);
 
-      // Search Pokemon
-      const allPokemon = await db.getAll("pokemon");
       const matchedPokemon = allPokemon
         .filter(
           (p) =>
@@ -91,8 +100,6 @@ export function GlobalSearch() {
         })),
       );
 
-      // Search Moves
-      const allMoves = await db.getAll("moves");
       const matchedMoves = allMoves
         .filter((m) => m.name_en.toLowerCase().includes(lowerTerm) || m.name_ar.includes(term))
         .slice(0, 5);
@@ -108,8 +115,6 @@ export function GlobalSearch() {
         })),
       );
 
-      // Search Items
-      const allItems = await db.getAll("items");
       const matchedItems = allItems
         .filter((i) => i.name_en.toLowerCase().includes(lowerTerm) || i.name_ar.includes(term))
         .slice(0, 5);
@@ -125,8 +130,6 @@ export function GlobalSearch() {
         })),
       );
 
-      // Search Locations
-      const allLocations = await db.getAll("locations");
       const matchedLocations = allLocations
         .filter((l) => l.name_en.toLowerCase().includes(lowerTerm) || l.name_ar.includes(term))
         .slice(0, 5);
@@ -142,8 +145,6 @@ export function GlobalSearch() {
         })),
       );
 
-      // Search Gyms
-      const allGyms = await db.getAll("gyms");
       const matchedGyms = allGyms
         .filter(
           (g) =>
@@ -164,7 +165,7 @@ export function GlobalSearch() {
 
       return allResults;
     } catch (e) {
-      console.warn("IndexedDB search failed:", e);
+      console.warn("Local search failed:", e);
       return [];
     }
   }, []);
@@ -180,120 +181,124 @@ export function GlobalSearch() {
     setLoading(true);
 
     const fetchResults = async () => {
-      // Try IndexedDB first (works offline)
-      const localResults = await searchFromIndexedDB(search);
+      const localResults = await searchFromLocalData(search);
 
-      if (localResults.length > 0 || isOffline) {
+      if (localResults.length > 0 || isOffline || !hasSupabaseConfig) {
         setResults(localResults);
         setLoading(false);
         return;
       }
 
-      // Fallback to Supabase when online and no local data
-      const allResults: SearchResult[] = [];
+      try {
+        const allResults: SearchResult[] = [];
 
-      // Search Pokemon
-      const { data: pokemon } = await supabase
-        .from("pokemon")
-        .select("id, name_en, name_ar, types, available_in")
-        .or(`name_en.ilike.%${searchTerm}%,name_ar.ilike.%${searchTerm}%`)
-        .limit(5);
+        // Search Pokemon
+        const { data: pokemon } = await supabase
+          .from("pokemon")
+          .select("id, name_en, name_ar, types, available_in")
+          .or(`name_en.ilike.%${searchTerm}%,name_ar.ilike.%${searchTerm}%`)
+          .limit(5);
 
-      if (pokemon) {
-        allResults.push(
-          ...pokemon.map((p) => ({
-            id: p.id,
-            type: "pokemon" as const,
-            name_en: p.name_en,
-            name_ar: p.name_ar,
-            subtype: Array.isArray(p.types) ? (p.types as string[]).join("/") : undefined,
-            available_in: p.available_in as string[] | undefined,
-          })),
-        );
+        if (pokemon) {
+          allResults.push(
+            ...pokemon.map((p) => ({
+              id: p.id,
+              type: "pokemon" as const,
+              name_en: p.name_en,
+              name_ar: p.name_ar,
+              subtype: Array.isArray(p.types) ? (p.types as string[]).join("/") : undefined,
+              available_in: p.available_in as string[] | undefined,
+            })),
+          );
+        }
+
+        // Search Moves
+        const { data: moves } = await supabase
+          .from("moves")
+          .select("id, name_en, name_ar, type, available_in")
+          .or(`name_en.ilike.%${searchTerm}%,name_ar.ilike.%${searchTerm}%`)
+          .limit(5);
+
+        if (moves) {
+          allResults.push(
+            ...moves.map((m) => ({
+              id: m.id,
+              type: "move" as const,
+              name_en: m.name_en,
+              name_ar: m.name_ar,
+              subtype: m.type,
+              available_in: m.available_in as string[] | undefined,
+            })),
+          );
+        }
+
+        // Search Items
+        const { data: items } = await supabase
+          .from("items")
+          .select("id, name_en, name_ar, category, available_in")
+          .or(`name_en.ilike.%${searchTerm}%,name_ar.ilike.%${searchTerm}%`)
+          .limit(5);
+
+        if (items) {
+          allResults.push(
+            ...items.map((i) => ({
+              id: i.id,
+              type: "item" as const,
+              name_en: i.name_en,
+              name_ar: i.name_ar,
+              subtype: i.category,
+              available_in: i.available_in as string[] | undefined,
+            })),
+          );
+        }
+
+        // Search Locations
+        const { data: locations } = await supabase
+          .from("locations")
+          .select("id, name_en, name_ar, region, available_in")
+          .or(`name_en.ilike.%${searchTerm}%,name_ar.ilike.%${searchTerm}%`)
+          .limit(5);
+
+        if (locations) {
+          allResults.push(
+            ...locations.map((l) => ({
+              id: l.id,
+              type: "location" as const,
+              name_en: l.name_en,
+              name_ar: l.name_ar,
+              subtype: l.region,
+              available_in: l.available_in as string[] | undefined,
+            })),
+          );
+        }
+
+        // Search Gyms
+        const { data: gyms } = await supabase
+          .from("gyms")
+          .select("id, leader_name_en, leader_name_ar, type, available_in")
+          .or(`leader_name_en.ilike.%${searchTerm}%,leader_name_ar.ilike.%${searchTerm}%`)
+          .limit(5);
+
+        if (gyms) {
+          allResults.push(
+            ...gyms.map((g) => ({
+              id: g.id,
+              type: "gym" as const,
+              name_en: g.leader_name_en,
+              name_ar: g.leader_name_ar,
+              subtype: g.type,
+              available_in: g.available_in as string[] | undefined,
+            })),
+          );
+        }
+
+        setResults(allResults);
+        setLoading(false);
+      } catch (error) {
+        console.warn("Remote search failed:", error);
+        setResults(localResults);
+        setLoading(false);
       }
-
-      // Search Moves
-      const { data: moves } = await supabase
-        .from("moves")
-        .select("id, name_en, name_ar, type, available_in")
-        .or(`name_en.ilike.%${searchTerm}%,name_ar.ilike.%${searchTerm}%`)
-        .limit(5);
-
-      if (moves) {
-        allResults.push(
-          ...moves.map((m) => ({
-            id: m.id,
-            type: "move" as const,
-            name_en: m.name_en,
-            name_ar: m.name_ar,
-            subtype: m.type,
-            available_in: m.available_in as string[] | undefined,
-          })),
-        );
-      }
-
-      // Search Items
-      const { data: items } = await supabase
-        .from("items")
-        .select("id, name_en, name_ar, category, available_in")
-        .or(`name_en.ilike.%${searchTerm}%,name_ar.ilike.%${searchTerm}%`)
-        .limit(5);
-
-      if (items) {
-        allResults.push(
-          ...items.map((i) => ({
-            id: i.id,
-            type: "item" as const,
-            name_en: i.name_en,
-            name_ar: i.name_ar,
-            subtype: i.category,
-            available_in: i.available_in as string[] | undefined,
-          })),
-        );
-      }
-
-      // Search Locations
-      const { data: locations } = await supabase
-        .from("locations")
-        .select("id, name_en, name_ar, region, available_in")
-        .or(`name_en.ilike.%${searchTerm}%,name_ar.ilike.%${searchTerm}%`)
-        .limit(5);
-
-      if (locations) {
-        allResults.push(
-          ...locations.map((l) => ({
-            id: l.id,
-            type: "location" as const,
-            name_en: l.name_en,
-            name_ar: l.name_ar,
-            subtype: l.region,
-            available_in: l.available_in as string[] | undefined,
-          })),
-        );
-      }
-
-      // Search Gyms
-      const { data: gyms } = await supabase
-        .from("gyms")
-        .select("id, leader_name_en, leader_name_ar, type, available_in")
-        .or(`leader_name_en.ilike.%${searchTerm}%,leader_name_ar.ilike.%${searchTerm}%`)
-        .limit(5);
-
-      if (gyms) {
-        allResults.push(
-          ...gyms.map((g) => ({
-            id: g.id,
-            type: "gym" as const,
-            name_en: g.leader_name_en,
-            name_ar: g.leader_name_ar,
-            subtype: g.type,
-            available_in: g.available_in as string[] | undefined,
-          })),
-        );
-      }
-
-      setResults(allResults);
-      setLoading(false);
     };
 
     const debounce = setTimeout(fetchResults, 300);

@@ -14,8 +14,8 @@ import {
   DialogTrigger,
 } from "@/original/components/ui/dialog";
 import { Search, Plus, X, Zap, Sword, Shield } from "lucide-react";
-import { supabase } from "@/original/integrations/supabase/client";
 import { useQuery } from "@tanstack/react-query";
+import { getAllMoves, getLearnsetsByPokemon } from "@/original/lib/store/dataStore";
 import { cn } from "@/original/lib/utils";
 
 interface Move {
@@ -48,30 +48,28 @@ export function MoveSelector({
   const [open, setOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
 
-  // Fetch learnset for this pokemon
   const { data: learnset } = useQuery({
     queryKey: ["learnset-moves", pokemonId, selectedGame],
     queryFn: async () => {
-      let query = supabase.from("learnsets").select("move_id").eq("pokemon_id", pokemonId);
-
-      if (selectedGame !== "all") {
-        query = query.eq("game_id", selectedGame);
-      }
-
-      const { data } = await query;
-      return data?.map((l) => l.move_id) || [];
+      const data = await getLearnsetsByPokemon(pokemonId, selectedGame);
+      return data.map((l) => l.move_id);
     },
     enabled: !!pokemonId,
   });
 
-  // Fetch all moves
   const { data: allMoves } = useQuery({
     queryKey: ["all-moves-selector"],
     queryFn: async () => {
-      const { data } = await supabase
-        .from("moves")
-        .select("id, name_en, name_ar, type, category, power, accuracy");
-      return (data || []) as Move[];
+      const data = await getAllMoves();
+      return data.map((move) => ({
+        id: move.id,
+        name_en: move.name_en,
+        name_ar: move.name_ar,
+        type: move.type,
+        category: move.category,
+        power: move.power,
+        accuracy: move.accuracy,
+      }));
     },
   });
 

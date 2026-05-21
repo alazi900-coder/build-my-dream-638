@@ -28,10 +28,9 @@ import { cn } from "@/original/lib/utils";
 import { getPokemonArtwork } from "@/original/services/pokeApiService";
 import { getItemSpriteUrl } from "@/original/lib/itemUtils";
 import { OfflineImage } from "@/original/components/ui/OfflineImage";
-import { supabase } from "@/original/integrations/supabase/client";
 import { useQuery } from "@tanstack/react-query";
 import { getLocalizedName, AR_PLACEHOLDERS } from "@/original/lib/localization";
-import { getDB } from "@/original/lib/db";
+import { getAllEvolutionNodes, getAllItems, getAllPokemon } from "@/original/lib/store/dataStore";
 import {
   EvolutionNodeDB,
   PokemonBasic,
@@ -58,71 +57,36 @@ export function EvolutionChain({
   const { selectedGame, isAvailableInGame } = useGameFilter();
   const isRtl = language === "ar";
 
-  // Fetch evolution nodes - try IndexedDB first, then Supabase
   const { data: evolutionNodes = [], isLoading: nodesLoading } = useQuery({
     queryKey: ["evolution-chain-nodes"],
-    queryFn: async () => {
-      try {
-        const db = await getDB();
-        const allNodes = await db.getAll("evolution_nodes");
-        if (allNodes.length > 0) {
-          return allNodes as EvolutionNodeDB[];
-        }
-      } catch (e) {
-        console.warn("IndexedDB read failed, falling back to Supabase");
-      }
-      const { data } = await supabase.from("evolution_nodes").select("*");
-      return (data || []) as EvolutionNodeDB[];
-    },
+    queryFn: async () => getAllEvolutionNodes() as Promise<EvolutionNodeDB[]>,
     staleTime: 1000 * 60 * 30,
   });
 
-  // Fetch all pokemon for names and stats - try IndexedDB first
   const { data: allPokemon = [], isLoading: pokemonLoading } = useQuery({
     queryKey: ["all-pokemon-evolution-with-stats"],
     queryFn: async () => {
-      try {
-        const db = await getDB();
-        const cached = await db.getAll("pokemon");
-        if (cached.length > 0) {
-          return cached.map((p) => ({
-            id: p.id,
-            name_en: p.name_en,
-            name_ar: p.name_ar,
-            available_in: p.available_in,
-            stats: p.stats,
-          })) as PokemonBasicWithStats[];
-        }
-      } catch (e) {
-        console.warn("IndexedDB read failed");
-      }
-      const { data } = await supabase
-        .from("pokemon")
-        .select("id, name_en, name_ar, available_in, stats");
-      return (data || []) as PokemonBasicWithStats[];
+      const data = await getAllPokemon();
+      return data.map((p) => ({
+        id: p.id,
+        name_en: p.name_en,
+        name_ar: p.name_ar,
+        available_in: p.available_in,
+        stats: p.stats,
+      })) as PokemonBasicWithStats[];
     },
     staleTime: 1000 * 60 * 30,
   });
 
-  // Fetch items for evolution items
   const { data: items = [] } = useQuery({
     queryKey: ["all-items-evolution"],
     queryFn: async () => {
-      try {
-        const db = await getDB();
-        const cached = await db.getAll("items");
-        if (cached.length > 0) {
-          return cached.map((i) => ({
-            id: i.id,
-            name_en: i.name_en,
-            name_ar: i.name_ar,
-          })) as ItemBasic[];
-        }
-      } catch (e) {
-        console.warn("IndexedDB read failed");
-      }
-      const { data } = await supabase.from("items").select("id, name_en, name_ar");
-      return (data || []) as ItemBasic[];
+      const data = await getAllItems();
+      return data.map((i) => ({
+        id: i.id,
+        name_en: i.name_en,
+        name_ar: i.name_ar,
+      })) as ItemBasic[];
     },
     staleTime: 1000 * 60 * 30,
   });

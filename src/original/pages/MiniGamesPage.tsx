@@ -13,7 +13,7 @@ import { AchievementsDisplay } from "@/original/components/minigames/Achievement
 import { AchievementToast } from "@/original/components/minigames/AchievementToast";
 import { useMiniGameStats } from "@/original/hooks/useMiniGameStats";
 import { useLanguage } from "@/original/contexts/LanguageContext";
-import { supabase } from "@/original/integrations/supabase/client";
+import { getAllPokemon } from "@/original/lib/store/dataStore";
 
 const GAMES = [
   {
@@ -99,18 +99,19 @@ export default function MiniGamesPage() {
     async function loadPokemon() {
       setIsLoading(true);
       try {
-        const { data, error } = await supabase
-          .from("pokemon")
-          .select("id, name_en, name_ar, stats")
-          .order("id")
-          .limit(500);
-
-        if (error) throw error;
-
-        // Transform stats from Json to proper type
-        const transformedData = (data || []).map((p) => ({
-          ...p,
-          stats: p.stats as unknown as Pokemon["stats"],
+        const data = await getAllPokemon();
+        const transformedData = data.slice(0, 500).map((p) => ({
+          id: p.id,
+          name_en: p.name_en,
+          name_ar: p.name_ar,
+          stats: {
+            hp: p.stats.hp,
+            attack: p.stats.atk,
+            defense: p.stats.def,
+            sp_attack: p.stats.spa,
+            sp_defense: p.stats.spd,
+            speed: p.stats.spe,
+          },
         }));
 
         setPokemon(transformedData);

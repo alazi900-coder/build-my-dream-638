@@ -6,8 +6,8 @@ import { Badge } from "@/original/components/ui/badge";
 import { Input } from "@/original/components/ui/input";
 import { Button } from "@/original/components/ui/button";
 import { TypeBadge } from "@/original/components/ui/type-badge";
-import { supabase } from "@/original/integrations/supabase/client";
 import { useQuery } from "@tanstack/react-query";
+import { getAllMoves, getLearnsetsByPokemon } from "@/original/lib/store/dataStore";
 import {
   Search,
   BookOpen,
@@ -30,7 +30,6 @@ import {
   LEARN_METHOD_LABELS,
   getLocalizedLearnMethod,
 } from "@/original/lib/localization";
-import { getDB } from "@/original/lib/db";
 import { useOnlineStatus } from "@/original/hooks/useOnlineStatus";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/original/components/ui/dialog";
 import { MoveTypeAnimation } from "@/original/components/moves/MoveTypeAnimation";
@@ -109,8 +108,6 @@ export function LearnsetSection({ pokemonId, pokemonName }: Props) {
   const [methodFilter, setMethodFilter] = useState("all");
   const [typeFilter, setTypeFilter] = useState("all");
   const [searchTerm, setSearchTerm] = useState("");
-  const [offlineLearnsets, setOfflineLearnsets] = useState<Learnset[] | null>(null);
-  const [offlineMoves, setOfflineMoves] = useState<Move[] | null>(null);
   const [selectedMove, setSelectedMove] = useState<SelectedMoveData | null>(null);
   const [isFavorite, setIsFavorite] = useState(false);
 
@@ -151,92 +148,15 @@ export function LearnsetSection({ pokemonId, pokemonName }: Props) {
     }
   }, [selectedMove]);
 
-  // Try to load from IndexedDB when offline
-  useEffect(() => {
-    if (!isOnline) {
-      (async () => {
-        try {
-          const db = await getDB();
-
-          // Get learnsets for this pokemon
-          const allLearnsets = await db.getAll("learnsets");
-          const filtered = allLearnsets.filter((ls) => ls.pokemon_id === pokemonId);
-          setOfflineLearnsets(filtered as unknown as Learnset[]);
-
-          // Get all moves
-          const allMoves = await db.getAll("moves");
-          setOfflineMoves(allMoves as unknown as Move[]);
-
-          if (import.meta.env.DEV) {
-            console.log(
-              `[Learnset Offline] Pokemon ${pokemonId}: ${filtered.length} learnsets from IndexedDB`,
-            );
-          }
-        } catch (err) {
-          console.error("Error loading offline learnsets:", err);
-        }
-      })();
-    }
-  }, [isOnline, pokemonId]);
-
-  // Fetch learnsets - online mode
-  const { data: onlineLearnsets, isLoading: learnsetsLoading } = useQuery({
+  const { data: learnsets, isLoading: learnsetsLoading } = useQuery({
     queryKey: ["learnsets", pokemonId, selectedGame],
-    queryFn: async () => {
-      // First try with game filter
-      let query = supabase.from("learnsets").select("*").eq("pokemon_id", pokemonId);
-
-      if (selectedGame !== "all") {
-        query = query.eq("game_id", selectedGame);
-      }
-
-      const { data } = await query;
-
-      // If no results and game filter was applied, retry without filter
-      if ((!data || data.length === 0) && selectedGame !== "all") {
-        const { data: allGameData } = await supabase
-          .from("learnsets")
-          .select("*")
-          .eq("pokemon_id", pokemonId);
-
-        if (import.meta.env.DEV) {
-          console.log(
-            `[Learnset Debug] Pokemon ${pokemonId}: Found ${allGameData?.length || 0} moves across all games`,
-          );
-        }
-
-        return (allGameData || []) as Learnset[];
-      }
-
-      if (import.meta.env.DEV) {
-        console.log(
-          `[Learnset Debug] Pokemon ${pokemonId}: Found ${data?.length || 0} moves for game ${selectedGame}`,
-        );
-      }
-
-      return (data || []) as Learnset[];
-    },
-    enabled: isOnline, // Only run when online
+    queryFn: async () => getLearnsetsByPokemon(pokemonId, selectedGame) as Promise<Learnset[]>,
   });
 
-  // Fetch all moves - online mode
-  const { data: onlineMoves } = useQuery({
+  const { data: moves } = useQuery({
     queryKey: ["all-moves"],
-    queryFn: async () => {
-      const { data } = await supabase.from("moves").select("*");
-
-      if (import.meta.env.DEV) {
-        console.log(`[Learnset Debug] Total moves in database: ${data?.length || 0}`);
-      }
-
-      return (data || []) as Move[];
-    },
-    enabled: isOnline,
+    queryFn: async () => getAllMoves() as Promise<Move[]>,
   });
-
-  // Use offline data when offline, online data when online
-  const learnsets = isOnline ? onlineLearnsets : offlineLearnsets;
-  const moves = isOnline ? onlineMoves : offlineMoves;
 
   // Combine learnsets with moves
   const learnsetWithMoves = useMemo(() => {
@@ -260,8 +180,7 @@ export function LearnsetSection({ pokemonId, pokemonName }: Props) {
   const filteredLearnset = useMemo(() => {
     let result = learnsetWithMoves;
 
-    // Game filter (for offline mode, apply client-side)
-    if (!isOnline && selectedGame !== "all") {
+    if (selectedGame !== "all") {
       result = result.filter((ls) => ls.game_id === selectedGame);
     }
 
@@ -306,7 +225,7 @@ export function LearnsetSection({ pokemonId, pokemonName }: Props) {
     });
 
     return result;
-  }, [learnsetWithMoves, methodFilter, typeFilter, searchTerm, isOnline, selectedGame]);
+  }, [learnsetWithMoves, methodFilter, typeFilter, searchTerm, selectedGame]);
 
   const getMethodBadge = (method: string, level: number | null) => {
     switch (method) {
@@ -358,7 +277,7 @@ export function LearnsetSection({ pokemonId, pokemonName }: Props) {
     }
   };
 
-  const isLoading = isOnline ? learnsetsLoading : offlineLearnsets === null;
+  const isLoading = learnsetsLoading;
 
   if (isLoading) {
     return (
@@ -382,7 +301,7 @@ export function LearnsetSection({ pokemonId, pokemonName }: Props) {
   const hasNoLearnsetData = !learnsets || learnsets.length === 0;
 
   // Check if offline and no cached data
-  const offlineNoData = !isOnline && offlineLearnsets !== null && offlineLearnsets.length === 0;
+  const offlineNoData = !isOnline && learnsets !== undefined && learnsets.length === 0;
 
   return (
     <Card className="border-border bg-card">

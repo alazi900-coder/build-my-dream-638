@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { supabase } from "@/original/integrations/supabase/client";
+import { supabase, hasSupabaseConfig } from "@/original/integrations/supabase/client";
 import { useLanguage } from "@/original/contexts/LanguageContext";
 import { Layout } from "@/original/components/layout/Layout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/original/components/ui/card";
@@ -40,6 +40,7 @@ import {
   getAllAdventures,
   ACHIEVEMENTS,
 } from "@/original/lib/adventureStorage";
+import { getAllPokemon } from "@/original/lib/store/dataStore";
 
 interface HeroConfig {
   heroName: string;
@@ -48,14 +49,28 @@ interface HeroConfig {
   startingRegion: string;
 }
 
+interface StoryPokemon {
+  id: number;
+  name_en: string;
+  name_ar: string;
+  types: string[];
+  is_legendary: boolean;
+}
+
+interface StoryGeneratorResult {
+  story: string;
+  choices: string[];
+  error?: string;
+}
+
 // Enhanced story types with length and difficulty
 const storyTypes = [
   {
     value: "adventure",
     labelEn: "Adventure",
     labelAr: "مغامرة",
-    descKeyAr: "story.adventureDesc",
-    descKeyEn: "story.adventureDesc",
+    descEn: "Explore new routes, meet trainers, and discover hidden challenges.",
+    descAr: "استكشاف وتحديات ومقابلة مدربين جدد.",
     lengthKey: "story.lengthShort",
     difficultyKey: "story.difficultyEasy",
     lengthIcon: Clock,
@@ -68,8 +83,8 @@ const storyTypes = [
     value: "mystery",
     labelEn: "Mystery",
     labelAr: "غموض",
-    descKeyAr: "story.mysteryDesc",
-    descKeyEn: "story.mysteryDesc",
+    descEn: "Follow clues and uncover a Pokémon mystery.",
+    descAr: "تتبع الأدلة واكشف لغزًا في عالم البوكيمون.",
     lengthKey: "story.lengthMedium",
     difficultyKey: "story.difficultyMedium",
     lengthIcon: Clock,
@@ -82,8 +97,8 @@ const storyTypes = [
     value: "comedy",
     labelEn: "Comedy",
     labelAr: "كوميديا",
-    descKeyAr: "story.comedyDesc",
-    descKeyEn: "story.comedyDesc",
+    descEn: "A light adventure full of funny surprises.",
+    descAr: "مغامرة خفيفة مليئة بالمواقف المضحكة.",
     lengthKey: "story.lengthShort",
     difficultyKey: "story.difficultyEasy",
     lengthIcon: Clock,
@@ -96,8 +111,8 @@ const storyTypes = [
     value: "heroic",
     labelEn: "Heroic",
     labelAr: "بطولي",
-    descKeyAr: "story.heroicDesc",
-    descKeyEn: "story.heroicDesc",
+    descEn: "Face a major threat and become the region's hero.",
+    descAr: "واجه خطرًا كبيرًا وكن بطل المنطقة.",
     lengthKey: "story.lengthLong",
     difficultyKey: "story.difficultyHard",
     lengthIcon: Clock,
@@ -134,19 +149,35 @@ export default function AdventureStoryPage() {
   const [activeTab, setActiveTab] = useState<"new" | "saved">("new");
   const [showPreview, setShowPreview] = useState(false);
 
-  const { data: pokemon = [] } = useQuery({
+  const { data: pokemon = [] } = useQuery<StoryPokemon[]>({
     queryKey: ["pokemon-story-selector"],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from("pokemon")
-        .select("id, name_en, name_ar, types, is_legendary")
-        .order("id")
-        .limit(151);
-      if (error) throw error;
-      return (data || []).map((p) => ({
-        ...p,
-        types: Array.isArray(p.types) ? (p.types as string[]) : [],
-        is_legendary: p.is_legendary || false,
+      if (hasSupabaseConfig) {
+        try {
+          const { data, error } = await supabase
+            .from("pokemon")
+            .select("id, name_en, name_ar, types, is_legendary")
+            .order("id")
+            .limit(151);
+          if (!error && data && data.length > 0) {
+            return data.map((p) => ({
+              ...p,
+              types: Array.isArray(p.types) ? (p.types as string[]) : [],
+              is_legendary: p.is_legendary || false,
+            }));
+          }
+        } catch {
+          // Local Pokémon data powers story setup without network access.
+        }
+      }
+
+      const localPokemon = await getAllPokemon();
+      return localPokemon.slice(0, 151).map((p) => ({
+        id: p.id,
+        name_en: p.name_en,
+        name_ar: p.name_ar,
+        types: p.types,
+        is_legendary: p.is_legendary,
       }));
     },
   });
@@ -172,6 +203,11 @@ export default function AdventureStoryPage() {
   };
 
   // Generate mock preview (offline-safe, no AI call)
+  const getOfflineChoices = () =>
+    language === "ar"
+      ? ["استكشاف الطريق", "تدريب الفريق", "البحث عن دليل"]
+      : ["Explore the path", "Train the team", "Search for a clue"];
+
   const generateMockPreview = () => {
     const pokemonData = pokemon.find((p) => p.id.toString() === heroConfig.mainPokemonId);
     const region = regions.find((r) => r.id === heroConfig.startingRegion);
@@ -203,6 +239,23 @@ export default function AdventureStoryPage() {
     };
 
     return templates[selectedStoryType]?.[language] || templates.adventure[language];
+  };
+
+  const generateOfflineContinuation = (choice: string) => {
+    const pokemonData = pokemon.find((p) => p.id.toString() === heroConfig.mainPokemonId);
+    const pokemonName = pokemonData
+      ? language === "ar"
+        ? pokemonData.name_ar
+        : pokemonData.name_en
+      : language === "ar"
+        ? "البوكيمون"
+        : "the Pokémon";
+
+    if (language === "ar") {
+      return `اختار الفريق "${choice}"، فانطلق ${pokemonName} بثقة نحو المرحلة التالية. ظهرت علامات جديدة في الطريق، وكل قرار قرّب المغامرة من نهايتها السعيدة.`;
+    }
+
+    return `The team chose "${choice}", and ${pokemonName} moved confidently into the next stage. New signs appeared along the path, and every decision brought the adventure closer to a happy ending.`;
   };
 
   // Check for achievements
@@ -267,18 +320,30 @@ export default function AdventureStoryPage() {
           ? ` with companion ${companionPokemonData.name_en}`
           : "";
 
-      const { data, error } = await supabase.functions.invoke("ai-story-generator", {
-        body: {
-          pokemon: selectedPokemonData,
-          storyType: selectedStoryType,
-          language,
-          heroName: heroConfig.heroName || undefined,
-          region: heroConfig.startingRegion,
-          companionInfo,
-        },
-      });
+      let data: StoryGeneratorResult = {
+        story: generateMockPreview(),
+        choices: getOfflineChoices(),
+      };
 
-      if (error) throw error;
+      if (hasSupabaseConfig) {
+        const { data: generatedData, error } = await supabase.functions.invoke(
+          "ai-story-generator",
+          {
+            body: {
+              pokemon: selectedPokemonData,
+              storyType: selectedStoryType,
+              language,
+              heroName: heroConfig.heroName || undefined,
+              region: heroConfig.startingRegion,
+              companionInfo,
+            },
+          },
+        );
+
+        if (error) throw error;
+        data = generatedData as StoryGeneratorResult;
+      }
+
       if (data.error) {
         toast.error(data.error);
         return;
@@ -323,18 +388,30 @@ export default function AdventureStoryPage() {
 
     setIsGenerating(true);
     try {
-      const { data, error } = await supabase.functions.invoke("ai-story-generator", {
-        body: {
-          pokemon: selectedPokemonData,
-          storyType: selectedStoryType,
-          previousStory: currentAdventure.segments[currentAdventure.segments.length - 1],
-          choice,
-          language,
-          heroName: currentAdventure.heroName,
-        },
-      });
+      let data: StoryGeneratorResult = {
+        story: generateOfflineContinuation(choice),
+        choices: currentAdventure.choicesMade >= 2 ? [] : getOfflineChoices(),
+      };
 
-      if (error) throw error;
+      if (hasSupabaseConfig) {
+        const { data: generatedData, error } = await supabase.functions.invoke(
+          "ai-story-generator",
+          {
+            body: {
+              pokemon: selectedPokemonData,
+              storyType: selectedStoryType,
+              previousStory: currentAdventure.segments[currentAdventure.segments.length - 1],
+              choice,
+              language,
+              heroName: currentAdventure.heroName,
+            },
+          },
+        );
+
+        if (error) throw error;
+        data = generatedData as StoryGeneratorResult;
+      }
+
       if (data.error) {
         toast.error(data.error);
         return;
@@ -406,7 +483,10 @@ export default function AdventureStoryPage() {
             <h1 className="text-2xl font-bold">{t("Adventure Stories", "قصص المغامرات")}</h1>
           </div>
           <p className="text-muted-foreground max-w-md mx-auto leading-relaxed">
-            {t("story.narrativeIntro", "اختر بطلك، وحدد رحلته، ودع القصة تتشكل حسب قراراتك.")}
+            {t(
+              "Choose your hero, set the journey, and let the story react to your choices.",
+              "اختر بطلك، وحدد رحلته، ودع القصة تتشكل حسب قراراتك.",
+            )}
           </p>
         </div>
 
@@ -422,7 +502,7 @@ export default function AdventureStoryPage() {
                   </TabsTrigger>
                   <TabsTrigger value="saved" className="flex items-center gap-1.5">
                     <FolderOpen className="w-4 h-4" />
-                    {t("story.incompleteAdventures", "مغامرات غير مكتملة")}
+                    {t("Incomplete Adventures", "مغامرات غير مكتملة")}
                   </TabsTrigger>
                 </TabsList>
               </Tabs>
@@ -437,7 +517,7 @@ export default function AdventureStoryPage() {
                     onClick={suggestAdventure}
                   >
                     <Wand2 className="w-4 h-4 mr-2" />
-                    {t("story.suggestAdventure", "اقترح مغامرة سريعة")}
+                    {t("Suggest a Quick Adventure", "اقترح مغامرة سريعة")}
                   </Button>
 
                   {/* Hero Customizer */}
@@ -467,7 +547,7 @@ export default function AdventureStoryPage() {
                               variant="secondary"
                               className={`absolute -top-2 ${language === "ar" ? "-left-1" : "-right-1"} text-[10px] px-1.5`}
                             >
-                              {t("story.recommendedForBeginners", "مناسب للمبتدئين")}
+                              {t("Beginner Friendly", "مناسب للمبتدئين")}
                             </Badge>
                           )}
                           <span className="font-semibold block">
@@ -476,10 +556,7 @@ export default function AdventureStoryPage() {
                           <span
                             className={`text-xs block mt-1 ${selectedStoryType === type.value ? "opacity-80" : "text-muted-foreground"}`}
                           >
-                            {t(
-                              type.descKeyAr,
-                              language === "ar" ? "استكشاف وتحديات" : "Exploration and challenges",
-                            )}
+                            {t(type.descEn, type.descAr)}
                           </span>
                           <div
                             className={`flex items-center gap-3 mt-2 text-[10px] ${selectedStoryType === type.value ? "opacity-70" : "text-muted-foreground"}`}
@@ -510,7 +587,7 @@ export default function AdventureStoryPage() {
                         onClick={() => setShowPreview(true)}
                       >
                         <Eye className="w-4 h-4 mr-2" />
-                        {t("story.previewOpening", "معاينة البداية")}
+                        {t("Preview Opening", "معاينة البداية")}
                       </Button>
                     )}
 
@@ -665,14 +742,17 @@ export default function AdventureStoryPage() {
             <DialogHeader>
               <DialogTitle className="flex items-center gap-2">
                 <Eye className="w-5 h-5" />
-                {t("story.previewOpening", "معاينة البداية")}
+                {t("Preview Opening", "معاينة البداية")}
               </DialogTitle>
             </DialogHeader>
             <div className="p-4 bg-muted/50 rounded-lg border-s-4 border-primary italic leading-relaxed">
               {generateMockPreview()}
             </div>
             <p className="text-xs text-muted-foreground text-center">
-              {t("story.previewNote", "هذه معاينة تقريبية. القصة الفعلية ستكون أكثر تفصيلاً.")}
+              {t(
+                "This is an approximate preview. The actual story will be more detailed.",
+                "هذه معاينة تقريبية. القصة الفعلية ستكون أكثر تفصيلاً.",
+              )}
             </p>
           </DialogContent>
         </Dialog>

@@ -3,7 +3,7 @@ import { useLanguage } from "@/original/contexts/LanguageContext";
 import { useOfflineData } from "@/original/hooks/useOfflineData";
 import { Layout } from "@/original/components/layout/Layout";
 import { Button } from "@/original/components/ui/button";
-import { supabase } from "@/original/integrations/supabase/client";
+import { supabase, hasSupabaseConfig } from "@/original/integrations/supabase/client";
 import { useToast } from "@/original/hooks/use-toast";
 import {
   Upload,
@@ -26,6 +26,18 @@ import {
   FileJson,
 } from "lucide-react";
 import { seedAllData, SeedResult } from "@/original/data/seedData";
+import {
+  getAllEncounters,
+  getAllEvolutionNodes,
+  getAllGymRoster,
+  getAllGyms,
+  getAllItems,
+  getAllLearnsets,
+  getAllLocations,
+  getAllMoves,
+  getAllNPCs,
+  getAllPokemon,
+} from "@/original/lib/store/dataStore";
 import {
   importGalarPokemon,
   importSwshMoves,
@@ -158,6 +170,49 @@ export default function AdminPage() {
   const fetchDatabaseStats = async () => {
     setLoadingStats(true);
     try {
+      if (!hasSupabaseConfig) {
+        const [
+          pokemon,
+          moves,
+          items,
+          locations,
+          encounters,
+          gyms,
+          gymRoster,
+          npcs,
+          learnsets,
+          evolutionNodes,
+        ] = await Promise.all([
+          getAllPokemon(),
+          getAllMoves(),
+          getAllItems(),
+          getAllLocations(),
+          getAllEncounters(),
+          getAllGyms(),
+          getAllGymRoster(),
+          getAllNPCs(),
+          getAllLearnsets(),
+          getAllEvolutionNodes(),
+        ]);
+
+        setDbStats({
+          totalPokemon: pokemon.length,
+          totalMoves: moves.length,
+          totalItems: items.length,
+          totalLocations: locations.length,
+          totalEncounters: encounters.length,
+          totalGyms: gyms.length,
+          totalGymRoster: gymRoster.length,
+          totalNPCs: npcs.length,
+          totalLearnsets: learnsets.length,
+          totalEvolutionNodes: evolutionNodes.length,
+          pokemonWithSwsh: pokemon.filter((p) => p.available_in?.includes("swsh")).length,
+          pokemonWithLetsGo: pokemon.filter((p) => p.available_in?.includes("letsgo")).length,
+          pokemonWithArceus: pokemon.filter((p) => p.available_in?.includes("arceus")).length,
+        });
+        return;
+      }
+
       const [
         pokemonRes,
         movesRes,

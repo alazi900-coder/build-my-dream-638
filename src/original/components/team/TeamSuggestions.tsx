@@ -1,4 +1,3 @@
-// @ts-nocheck
 import { useMemo } from "react";
 import { useLanguage } from "@/original/contexts/LanguageContext";
 import { useGameFilter } from "@/original/contexts/GameFilterContext";

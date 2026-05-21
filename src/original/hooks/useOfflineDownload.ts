@@ -31,7 +31,8 @@ type TableName =
   | "npcs"
   | "learnsets"
   | "evolution_nodes"
-  | "games";
+  | "games"
+  | "pokemon_held_items";
 
 interface DownloadProgress {
   table: TableName | "images" | "sounds";
@@ -52,6 +53,7 @@ const TABLES_TO_SYNC: TableName[] = [
   "learnsets",
   "evolution_nodes",
   "games",
+  "pokemon_held_items",
 ];
 
 export type SectionId =
@@ -74,7 +76,7 @@ interface SectionConfig {
 export const DOWNLOAD_SECTIONS: SectionConfig[] = [
   { id: "dex", tables: ["pokemon"], imageType: "pokemon" },
   { id: "moves", tables: ["moves", "learnsets"], imageType: "maps" }, // maps includes type icons
-  { id: "items", tables: ["items"], imageType: "items" },
+  { id: "items", tables: ["items", "pokemon_held_items"], imageType: "items" },
   { id: "gyms", tables: ["gyms", "gym_roster", "npcs"], imageType: "gyms" },
   { id: "maps", tables: ["locations", "encounters"], imageType: "maps" },
   { id: "core", tables: ["evolution_nodes", "games"] },
