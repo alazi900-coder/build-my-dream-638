@@ -125,18 +125,26 @@ export default function ComparePage() {
         created_at: new Date().toISOString(),
       };
 
-      if (!hasSupabaseConfig) {
+      const saveLocally = () => {
         const nextPresets = [preset, ...presets];
         setPresets(nextPresets);
         localStorage.setItem("comparison-presets", JSON.stringify(nextPresets));
+      };
+
+      if (!hasSupabaseConfig) {
+        saveLocally();
         return;
       }
 
       const { id, created_at: createdAt, ...payload } = preset;
       void id;
       void createdAt;
-      const { error } = await supabase.from("comparison_presets").insert(payload);
-      if (error) throw error;
+      try {
+        const { error } = await supabase.from("comparison_presets").insert(payload);
+        if (error) throw error;
+      } catch {
+        saveLocally();
+      }
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["comparison-presets"] });
@@ -163,8 +171,12 @@ export default function ComparePage() {
       localStorage.setItem("comparison-presets", JSON.stringify(nextPresets));
       if (!hasSupabaseConfig) return;
 
-      const { error } = await supabase.from("comparison_presets").delete().eq("id", id);
-      if (error) throw error;
+      try {
+        const { error } = await supabase.from("comparison_presets").delete().eq("id", id);
+        if (error) throw error;
+      } catch {
+        return;
+      }
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["comparison-presets"] });
