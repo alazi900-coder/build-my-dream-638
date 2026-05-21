@@ -873,7 +873,6 @@ export default function AdminPage() {
 
         <DataHealthCheck onRefresh={fetchDatabaseStats} />
 
-
         {/* Database Statistics Section */}
         <section className="bg-gradient-to-br from-primary/5 to-chart-2/5 border border-border rounded-xl p-5 space-y-5">
           <div className="flex items-center justify-between">
