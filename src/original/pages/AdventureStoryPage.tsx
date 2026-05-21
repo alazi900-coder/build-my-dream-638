@@ -69,8 +69,8 @@ const storyTypes = [
     value: "adventure",
     labelEn: "Adventure",
     labelAr: "مغامرة",
-    descKeyAr: "story.adventureDesc",
-    descKeyEn: "story.adventureDesc",
+    descEn: "Explore new routes, meet trainers, and discover hidden challenges.",
+    descAr: "استكشاف وتحديات ومقابلة مدربين جدد.",
     lengthKey: "story.lengthShort",
     difficultyKey: "story.difficultyEasy",
     lengthIcon: Clock,
@@ -83,8 +83,8 @@ const storyTypes = [
     value: "mystery",
     labelEn: "Mystery",
     labelAr: "غموض",
-    descKeyAr: "story.mysteryDesc",
-    descKeyEn: "story.mysteryDesc",
+    descEn: "Follow clues and uncover a Pokémon mystery.",
+    descAr: "تتبع الأدلة واكشف لغزًا في عالم البوكيمون.",
     lengthKey: "story.lengthMedium",
     difficultyKey: "story.difficultyMedium",
     lengthIcon: Clock,
@@ -97,8 +97,8 @@ const storyTypes = [
     value: "comedy",
     labelEn: "Comedy",
     labelAr: "كوميديا",
-    descKeyAr: "story.comedyDesc",
-    descKeyEn: "story.comedyDesc",
+    descEn: "A light adventure full of funny surprises.",
+    descAr: "مغامرة خفيفة مليئة بالمواقف المضحكة.",
     lengthKey: "story.lengthShort",
     difficultyKey: "story.difficultyEasy",
     lengthIcon: Clock,
@@ -111,8 +111,8 @@ const storyTypes = [
     value: "heroic",
     labelEn: "Heroic",
     labelAr: "بطولي",
-    descKeyAr: "story.heroicDesc",
-    descKeyEn: "story.heroicDesc",
+    descEn: "Face a major threat and become the region's hero.",
+    descAr: "واجه خطرًا كبيرًا وكن بطل المنطقة.",
     lengthKey: "story.lengthLong",
     difficultyKey: "story.difficultyHard",
     lengthIcon: Clock,
@@ -483,7 +483,10 @@ export default function AdventureStoryPage() {
             <h1 className="text-2xl font-bold">{t("Adventure Stories", "قصص المغامرات")}</h1>
           </div>
           <p className="text-muted-foreground max-w-md mx-auto leading-relaxed">
-            {t("story.narrativeIntro", "اختر بطلك، وحدد رحلته، ودع القصة تتشكل حسب قراراتك.")}
+            {t(
+              "Choose your hero, set the journey, and let the story react to your choices.",
+              "اختر بطلك، وحدد رحلته، ودع القصة تتشكل حسب قراراتك.",
+            )}
           </p>
         </div>
 
@@ -499,7 +502,7 @@ export default function AdventureStoryPage() {
                   </TabsTrigger>
                   <TabsTrigger value="saved" className="flex items-center gap-1.5">
                     <FolderOpen className="w-4 h-4" />
-                    {t("story.incompleteAdventures", "مغامرات غير مكتملة")}
+                    {t("Incomplete Adventures", "مغامرات غير مكتملة")}
                   </TabsTrigger>
                 </TabsList>
               </Tabs>
@@ -514,7 +517,7 @@ export default function AdventureStoryPage() {
                     onClick={suggestAdventure}
                   >
                     <Wand2 className="w-4 h-4 mr-2" />
-                    {t("story.suggestAdventure", "اقترح مغامرة سريعة")}
+                    {t("Suggest a Quick Adventure", "اقترح مغامرة سريعة")}
                   </Button>
 
                   {/* Hero Customizer */}
@@ -544,7 +547,7 @@ export default function AdventureStoryPage() {
                               variant="secondary"
                               className={`absolute -top-2 ${language === "ar" ? "-left-1" : "-right-1"} text-[10px] px-1.5`}
                             >
-                              {t("story.recommendedForBeginners", "مناسب للمبتدئين")}
+                              {t("Beginner Friendly", "مناسب للمبتدئين")}
                             </Badge>
                           )}
                           <span className="font-semibold block">
@@ -553,10 +556,7 @@ export default function AdventureStoryPage() {
                           <span
                             className={`text-xs block mt-1 ${selectedStoryType === type.value ? "opacity-80" : "text-muted-foreground"}`}
                           >
-                            {t(
-                              type.descKeyAr,
-                              language === "ar" ? "استكشاف وتحديات" : "Exploration and challenges",
-                            )}
+                            {t(type.descEn, type.descAr)}
                           </span>
                           <div
                             className={`flex items-center gap-3 mt-2 text-[10px] ${selectedStoryType === type.value ? "opacity-70" : "text-muted-foreground"}`}
@@ -587,7 +587,7 @@ export default function AdventureStoryPage() {
                         onClick={() => setShowPreview(true)}
                       >
                         <Eye className="w-4 h-4 mr-2" />
-                        {t("story.previewOpening", "معاينة البداية")}
+                        {t("Preview Opening", "معاينة البداية")}
                       </Button>
                     )}
 
@@ -742,14 +742,17 @@ export default function AdventureStoryPage() {
             <DialogHeader>
               <DialogTitle className="flex items-center gap-2">
                 <Eye className="w-5 h-5" />
-                {t("story.previewOpening", "معاينة البداية")}
+                {t("Preview Opening", "معاينة البداية")}
               </DialogTitle>
             </DialogHeader>
             <div className="p-4 bg-muted/50 rounded-lg border-s-4 border-primary italic leading-relaxed">
               {generateMockPreview()}
             </div>
             <p className="text-xs text-muted-foreground text-center">
-              {t("story.previewNote", "هذه معاينة تقريبية. القصة الفعلية ستكون أكثر تفصيلاً.")}
+              {t(
+                "This is an approximate preview. The actual story will be more detailed.",
+                "هذه معاينة تقريبية. القصة الفعلية ستكون أكثر تفصيلاً.",
+              )}
             </p>
           </DialogContent>
         </Dialog>
